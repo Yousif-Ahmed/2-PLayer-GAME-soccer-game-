@@ -3,7 +3,7 @@
 ;------------------------------------------
 .DATA
 	
-	img  DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
+	Player1Color  DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	     DB  31, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18
 	     DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	     DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
@@ -461,13 +461,14 @@
 	     DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	     DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	     DB  31, 31, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 31, 31, 31
-	imgW equ 120
-	imgH equ 150
-	imgX_move DW 10
-	imgY_move DW 127
+	Player1W equ 120
+	Player1H equ 150
+	Player1X DW 10
+	Player1Y DW 127
+    Player1SpeedX DW 0
+	Player1SpeedY DW 1
 
-	BallW equ 35
-    BallH equ 35
+
     BallColor DB 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 31, 16, 16, 31, 31, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 
         DB 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31 
         DB 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31 
@@ -503,24 +504,46 @@
     BallY Dw 00
     BallSpeedX DW 1
     BallSpeedY DW 1
+	BallW equ 35
+    BallH equ 35
 
+	ScreenH 	equ 280
+	SCreenW 	equ 600
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 .CODE
 MAIN PROC FAR
 	             mov  ax, @data
 	             mov  DS, ax
+
 	             mov  ax, 4F02h         	
 	             mov  bx, 0100h         	; 640x400 screen graphics mode
 	             INT  10h               	;execute the configuration
-	             call DRAWE_PLAYER
-	CHECK:       mov  ah,1                  ;Get key pressed Don't Wait for the key
+
+				 
+	GameProcess:
+				call CheckKeyPressed
+				call Refresh
+    			call CheckBallCollisionWithScreen
+    			call UpdateBallPosition
+				call UpdatePlayer1Position
+				call CheckBallCollisionWithPlayer1
+
+
+				jmp GameProcess
+  
+	             mov  dl,10
+	             int  21h
+            
+MAIN ENDP
+
+;description
+CheckKeyPressed PROC
+
+		         mov  ah,1                  ;Get key pressed Don't Wait for the key
 	             int  16h					
-	             jz   CHECK
 
-	             call SHIFT_PLAYER         ; Clear player in prev position
-
-	             cmp  ah,72                ; Check key pressed the update position
+		         cmp  ah,72                ; Check key pressed the update position
 	             jz   MoveUp
 
 	             cmp  ah,80
@@ -532,45 +555,39 @@ MAIN PROC FAR
 	             cmp  ah,77
 	             jz   MoveRight
 
+	             jmp  ExitCheckKeyPressed				 
 	ReadKey:     
 	             mov  ah,0
 	             int  16h
-	             call DRAWE_PLAYER
-	             jmp  CHECK
+	            ; call DRAWE_PLAYER
+	             jmp  ExitCheckKeyPressed
 
 	MoveUp:      
-	             SUB imgY_move, 1
+	             mov Player1Y, 100
 	             jmp  ReadKey
 
 	MoveDown:    
-	             ADD imgY_move,1
+	             ADD Player1Y,1
 	             jmp  ReadKey
 
 	MoveLeft:    
-	             SUB imgX_move,1
+	             SUB Player1X,1
 	             jmp  ReadKey
 
 	MoveRight:   
-	             ADD imgX_move,1
-
-				
-					call Refresh
-    				call CheckBallCollisioinWithScreen
-    				call UpdateBallPosition
-
+	             ADD Player1X,1
 	             jmp  ReadKey
 
-	                
-  
-	             mov  dl,10
-	             int  21h
-            
-MAIN ENDP
+	ExitCheckKeyPressed:
+	ret
+
+CheckKeyPressed ENDP
+
 DRAWE_PLAYER PROC
 	      MOV AH,0Bh        	;set the configuration
-	       MOV CX, imgW  	    ;set the width (X) up to 64 (based on image resolution)
-	       MOV DX, imgH 	    ;set the hieght (Y) up to 64 (based on image resolution)
-		   mov DI, offset img   ; to iterate over the pixels
+	       MOV CX, Player1W  	    ;set the width (X) up to 64 (based on image resolution)
+	       MOV DX, Player1H 	    ;set the hieght (Y) up to 64 (based on image resolution)
+		   mov DI, offset Player1Color   ; to iterate over the pixels
 	       jmp Start    	    ;Avoid drawing before the calculations
 	Drawit:
 	       MOV AH,0Ch   	    ;set the configuration to writing a pixel
@@ -579,17 +596,17 @@ DRAWE_PLAYER PROC
 		   JNZ valid
 		   jmp start
 	valid: 
-	       ADD CX, imgX_move    ; for shifting in the x -axis
-		   ADD DX, imgY_move    ; for shifting in the y-axis
+	       ADD CX, Player1X    ; for shifting in the x -axis
+		   ADD DX, Player1Y    ; for shifting in the y-axis
 	       MOV BH,00h   	    ;set the page number
 	       INT 10h      	    ;execute the configuration
-		   SUB CX ,imgX_move    ; return to our CX to validate our loop which get out in (0 ,0)
-		   SUB DX ,imgY_move
+		   SUB CX ,Player1X    ; return to our CX to validate our loop which get out in (0 ,0)
+		   SUB DX ,Player1Y
 	Start: 
 		   inc DI
 	       DEC Cx       	    ;  loop iteration in x direction
 	       JNZ Drawit      	    ;  check if we can draw c urrent x and y and excape the y iteration
-	       mov Cx, imgW 	    ;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	       mov Cx, Player1W 	    ;  if loop iteration in y direction, then x should start over so that we sweep the grid
 	       DEC DX       	    ;  loop iteration in y direction
 	       JZ  ENDING        	;  both x and y reached 00 so end program
 		   Jmp Drawit
@@ -597,50 +614,55 @@ DRAWE_PLAYER PROC
 	ENDING:
 	             ret
 DRAWE_PLAYER ENDP
-SHIFT_PLAYER PROC
-	                push AX
+; SHIFT_PLAYER PROC
+; 	                push AX
 	                
-	   MOV AH,0Bh   	
-	       MOV CX, imgW  	;
-	       MOV DX, imgH 	;set the hieght (Y) up to 64 (based on image resolution)
-		   mov DI, offset img  ; to iterate over the pixels
-	       jmp StartC    	;Avoid drawing before the calculations
-	CLEAN:
-		   ADD CX, imgX_move  ; for shifting in the x -axis
-		   ADD DX, imgY_move  ; for shifting in the y-axis	
-	       MOV AH,0Ch   	;set the configuration to writing a pixel
-           mov al, 00     ; color of the current coordinates
-	       MOV BH,00h   	;set the page number
-	       INT 10h      	;execute the configuration
-		   SUB CX ,imgX_move  ; return to our CX to validate our loop which get out in (0 ,0)
-		   SUB DX ,imgY_move
+; 	   MOV AH,0Bh   	
+; 	       MOV CX, Player1W  	;
+; 	       MOV DX, Player1H 	;set the hieght (Y) up to 64 (based on image resolution)
+; 		   mov DI, offset Player1Color  ; to iterate over the pixels
+; 	       jmp StartC    	;Avoid drawing before the calculations
+; 	CLEAN:
+; 		   ADD CX, Player1X  ; for shifting in the x -axis
+; 		   ADD DX, Player1Y  ; for shifting in the y-axis	
+; 	       MOV AH,0Ch   	;set the configuration to writing a pixel
+;            mov al, 00     ; color of the current coordinates
+; 	       MOV BH,00h   	;set the page number
+; 	       INT 10h      	;execute the configuration
+; 		   SUB CX ,Player1X  ; return to our CX to validate our loop which get out in (0 ,0)
+; 		   SUB DX ,Player1Y
 		   
-	StartC: 
-		   inc DI
-	       DEC Cx       	
-	       JNZ CLEAN      	;  check if we can draw c urrent x and y and excape the y iteration
-	       mov Cx, imgW 	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	       DEC DX       	;  loop iteration in y direction
-	       JZ  FINAL      	;  both x and y reached 00 so end program
-		   Jmp CLEAN
-		FINAL :	
-	                mov  SI,offset img 
-	                pop  AX
-	                ret
-SHIFT_PLAYER ENDP    
+; 	StartC: 
+; 		   inc DI
+; 	       DEC Cx       	
+; 	       JNZ CLEAN      	;  check if we can draw c urrent x and y and excape the y iteration
+; 	       mov Cx, Player1W 	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+; 	       DEC DX       	;  loop iteration in y direction
+; 	       JZ  FINAL      	;  both x and y reached 00 so end program
+; 		   Jmp CLEAN
+; 		FINAL :	
+; 	                mov  SI,offset Player1Color 
+; 	                pop  AX
+; 	                ret
+; SHIFT_PLAYER ENDP    
 
 ;description
 Refresh PROC
+;clear screen
+    mov  ax, 4F02h         	
+    mov  bx, 0100h         	; 640x400 screen graphics mode
+    INT  10h               	;execute the configuration
+
     mov ax,0600h
-    mov bh, 0DFh
+    mov bh, 71h
     mov cx,0
-    mov dl,79
-    mov dh,24
+    mov dx,184fh
     int 10h             ;using scrolling interrupt to clean the screen
     
+;calling the new frame elements
+    call DrawingBall   
+    call DRAWE_PLAYER
 
-    call DrawingBall   ;calling the new frame elements
-    
     mov ah,86h      
     mov dx,0FFh
     mov cx,0h
@@ -677,14 +699,13 @@ DrawRow:
 DrawingBall ENDP
 
 ;description
-CheckBallCollisioinWithScreen PROC
+CheckBallCollisionWithScreen PROC
 
-;first check the x axis maxx1>minx2&&maxx2>minx1
 
 ;check collision with right edge of the screen
     mov Ax,BallX
     add Ax,BallW
-    cmp Ax,320
+    cmp Ax,ScreenW
     
     JNG NoCollisionWithRightEdge
     NEG BallSpeedX
@@ -707,12 +728,12 @@ CheckBallCollisioinWithScreen PROC
 ;check collision with lower edge of the screen
     mov Ax,BallY
     add Ax,BallH
-    cmp Ax,200
+    cmp Ax,ScreenH
     JNG NoCollisionWithLowerEdge
     NEG BallSpeedY
     NoCollisionWithLowerEdge:
 
-CheckBallCollisioinWithScreen ENDP
+CheckBallCollisionWithScreen ENDP
 
 ;description
 UpdateBallPosition PROC
@@ -722,6 +743,56 @@ UpdateBallPosition PROC
     add BallY,Ax
     ret
 UpdateBallPosition ENDP
+
+;description
+UpdatePlayer1Position PROC
+
+	mov Bx,ScreenH
+	sub Bx,Player1H
+	cmp Player1Y,Bx
+	JE ExitUpdatePlayer1Position
+	mov Ax,Player1SpeedY
+	add Player1Y,Ax
+	
+	ExitUpdatePlayer1Position:
+	ret
+UpdatePlayer1Position ENDP
+
+;description
+CheckBallCollisionWithPlayer1 PROC
+;first check the x axis maxx1>minx2 && maxx2>minx1
+	mov Ax,BallX
+	add Ax,BallW
+	mov Bx ,Player1X
+	cmp Ax,Bx
+	JNG ExitCheckBallCollisionWithPlayer1
+
+	mov Ax,Player1X
+	add Ax,Player1W
+	mov Bx,BallX
+	cmp Ax,Bx
+	JNG ExitCheckBallCollisionWithPlayer1
+
+;first check the y axis maxy1>miny2 && maxy2>miny1
+
+	mov Ax,BallY
+	add Ax,BallH
+	mov Bx ,Player1Y
+	cmp Ax,Bx
+	JNG ExitCheckBallCollisionWithPlayer1
+
+	mov Ax,Player1Y
+	add Ax,Player1H
+	mov Bx,BallY
+	cmp Ax,Bx
+	JNG ExitCheckBallCollisionWithPlayer1
+
+	NEG BallSpeedX
+	NEG BallSpeedY
+
+	ExitCheckBallCollisionWithPlayer1:
+	ret
+CheckBallCollisionWithPlayer1 ENDP 
 
 
 
