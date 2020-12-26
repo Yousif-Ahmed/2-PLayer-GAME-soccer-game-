@@ -522,7 +522,9 @@ MAIN PROC FAR
 
 				 
 	GameProcess:                      
+	                                  call BackGround
 	                                  call CheckKeyPressed
+	                                  call DRAWE_PLAYER
 	                                  call Refresh
 	                                  call CheckBallCollisionWithScreen
 	                                  call UpdateBallPosition
@@ -537,17 +539,18 @@ MAIN PROC FAR
             
 MAIN ENDP
 
-	;description
+
 CheckKeyPressed PROC
 
-	                                  mov  ah,1                             	;Get key pressed Don't Wait for the key
+ReadKey: 	                          mov  ah,1                             	;Get key pressed Don't Wait for the key
+	                                  int  16h
+									  jz ExitCheckKeyPressed
+
+	                                  mov  ah,0
 	                                  int  16h
 
 	                                  cmp  ah,72                            	; Check key pressed the update position
 	                                  jz   MoveUp
-
-	                                  cmp  ah,80
-	                                  jz   MoveDown
 
 	                                  cmp  ah,75
 	                                  jz   MoveLeft
@@ -556,19 +559,15 @@ CheckKeyPressed PROC
 	                                  jz   MoveRight
 
 	                                  jmp  ExitCheckKeyPressed
-	ReadKey:                          
-	                                  mov  ah,0
-	                                  int  16h
+                         
+
 	; call DRAWE_PLAYER
-	                                  jmp  ExitCheckKeyPressed
 
 	MoveUp:                           
 	                                  mov  Player1Y, 100
 	                                  jmp  ReadKey
 
-	MoveDown:                         
-	                                  ADD  Player1Y,1
-	                                  jmp  ReadKey
+
 
 	MoveLeft:                         
 	                                  cmp  Player1X,-25
@@ -796,6 +795,48 @@ CheckBallCollisionWithPlayer1 PROC
 	                                  ret
 CheckBallCollisionWithPlayer1 ENDP
 
+BackGround proc
 
+	                                  mov  di,Player1H
+	                                  add  di,Player1Y
+	                                  sub  di,2
+
+	                                  mov  dx,0
+	                                  mov  al,7
+	                                  mov  ah,0ch
+	                                  mov  bh,0
+	again:                            mov  cx,0
+	back:                             int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back
+	                                  inc  dx
+	                                  cmp  dx,di
+	                                  jnz  again
+
+
+	                                  add  di,4
+	                                  mov  al,0
+	again1:                           mov  cx,0
+	back1:                            int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back1
+	                                  inc  dx
+	                                  cmp  dx,di
+	                                  jnz  again1
+
+	                                  mov  al,2
+	again2:                           mov  cx,0
+	back2:                            int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back2
+	                                  inc  dx
+	                                  cmp  dx,400
+	                                  jnz  again2
+	                                  ret
+
+BackGround endp
 
 END MAIN
