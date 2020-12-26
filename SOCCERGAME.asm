@@ -500,16 +500,19 @@
 	              DB  31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	              DB  31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 31, 16, 16, 31, 31, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	              DB  31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	BallX         Dw  00
-	BallY         Dw  00
-	BallSpeedX    DW  1
+	BallX         Dw  200
+	BallY         Dw  200
+	BallSpeedX    DW  -1
 	BallSpeedY    DW  1
 	BallW         equ 35
 	BallH         equ 35
 
 	ScreenH       equ 280
-	SCreenW       equ 600
+	SCreenW       equ 640
 
+	Gravity                 equ 1				;gravity acceleration
+	FractionDecreaseSpeed   equ 1				;speed loss due to faction between ball and walls
+	FractionIncreaseSpeed   equ 2				;speed gain due to player hitting a ball
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 .CODE
 MAIN PROC FAR
@@ -522,10 +525,12 @@ MAIN PROC FAR
 
 				 
 	GameProcess:                      
+									  ;call BackGround
 	                                  call CheckKeyPressed
+	                                  ;call DRAWE_PLAYER
 	                                  call Refresh
-	                                  call CheckBallCollisionWithScreen
 	                                  call UpdateBallPosition
+									  call CheckBallCollisionWithScreen
 	                                  call UpdatePlayer1Position
 	                                  call CheckBallCollisionWithPlayer1
 
@@ -537,17 +542,18 @@ MAIN PROC FAR
             
 MAIN ENDP
 
-	;description
+
 CheckKeyPressed PROC
 
-	                                  mov  ah,1                             	;Get key pressed Don't Wait for the key
+	ReadKey:                          mov  ah,1                             	;Get key pressed Don't Wait for the key
+	                                  int  16h
+	                                  jz   ExitCheckKeyPressed
+
+	                                  mov  ah,0
 	                                  int  16h
 
 	                                  cmp  ah,72                            	; Check key pressed the update position
 	                                  jz   MoveUp
-
-	                                  cmp  ah,80
-	                                  jz   MoveDown
 
 	                                  cmp  ah,75
 	                                  jz   MoveLeft
@@ -556,19 +562,15 @@ CheckKeyPressed PROC
 	                                  jz   MoveRight
 
 	                                  jmp  ExitCheckKeyPressed
-	ReadKey:                          
-	                                  mov  ah,0
-	                                  int  16h
+                         
+
 	; call DRAWE_PLAYER
-	                                  jmp  ExitCheckKeyPressed
 
 	MoveUp:                           
 	                                  mov  Player1Y, 100
 	                                  jmp  ReadKey
 
-	MoveDown:                         
-	                                  ADD  Player1Y,1
-	                                  jmp  ReadKey
+
 
 	MoveLeft:                         
 	                                  cmp  Player1X,-25
@@ -577,8 +579,10 @@ CheckKeyPressed PROC
 	NoLeft:                           jmp  ReadKey
 
 	MoveRight:                        
+	                                  cmp  Player1X, 553
+	                                  jz   NoRight
 	                                  ADD  Player1X,1
-	                                  jmp  ReadKey
+	NoRight:                          jmp  ReadKey
 
 	ExitCheckKeyPressed:              
 	                                  ret
@@ -710,21 +714,30 @@ CheckBallCollisionWithScreen PROC
 	                                  cmp  Ax,ScreenW
     
 	                                  JNG  NoCollisionWithRightEdge
+									  cmp  BallSpeedx,0
+									  JE   NoCollisionWithRightEdge
 	                                  NEG  BallSpeedX
+									  add  BallSpeedx,FractionDecreaseSpeed
 	NoCollisionWithRightEdge:         
 
 	;check collision with left edge of the screen
 	                                  mov  Ax,BallX
 	                                  cmp  Ax,0
 	                                  JNL  NoCollisionWithLeftEdge
+									  cmp  BallSpeedx,0
+									  JE   NoCollisionWithLeftEdge
 	                                  NEG  BallSpeedx
+									  sub  BallSpeedx,FractionDecreaseSpeed
 	NoCollisionWithLeftEdge:          
 
 	;check collision with upper edge of the screen
 	                                  mov  Ax,BallY
 	                                  cmp  Ax,0
 	                                  JNL  NoCollisionWithUpperEdge
+									  cmp  BallSpeedY,0
+									  JE   NoCollisionWithUpperEdge
 	                                  NEG  BallSpeedY
+									  sub  BallSpeedY,FractionDecreaseSpeed
 	NoCollisionWithUpperEdge:         
 
 	;check collision with lower edge of the screen
@@ -732,17 +745,35 @@ CheckBallCollisionWithScreen PROC
 	                                  add  Ax,BallH
 	                                  cmp  Ax,ScreenH
 	                                  JNG  NoCollisionWithLowerEdge
+									  cmp  BallSpeedY,0
+									  JE   NoCollisionWithLowerEdge
 	                                  NEG  BallSpeedY
+									  add  BallSpeedY,FractionDecreaseSpeed
 	NoCollisionWithLowerEdge:         
 
 CheckBallCollisionWithScreen ENDP
 
 	;description
 UpdateBallPosition PROC
+	;check if a player has hit the ball and still the ball is affected
+	
+	NoAffectOfLastPlayerShoot:
+	;add gravity affect
+									  mov  Ax,Gravity
+									  add  BallSpeedY,Ax
 	                                  mov  Ax,BallSpeedX
 	                                  add  BallX,Ax
 	                                  mov  Ax,BallSpeedY
 	                                  add  BallY,Ax
+	;check if ballY crossed the lower limit
+									  mov  Ax,ScreenH
+									  sub  Ax,BallH
+									  inc  Ax
+									  cmp  BallY,Ax
+									  JNG  ExitUpdateBallPosition	
+									  mov  BallY,Ax
+									  ExitUpdateBallPosition:
+
 	                                  ret
 UpdateBallPosition ENDP
 
@@ -790,12 +821,64 @@ CheckBallCollisionWithPlayer1 PROC
 	                                  JNG  ExitCheckBallCollisionWithPlayer1
 
 	                                  NEG  BallSpeedX
-	                                  NEG  BallSpeedY
+
+	;increase ballspeed in both direction due to colision
+									  add  BallSpeedY,10
+									  mov  Ax,Player1X
+									  add  Ax,Player1W
+									  mov  Bx,BallX
+									  add  Bx,BallW
+									  cmp  Ax,Bx
+									  JL   Player1IsOnLeft
+									  sub  BallSpeedX,5
+									  jmp  ExitCheckBallCollisionWithPlayer1
+		Player1IsOnLeft:			  add  BallSpeedX,5          
 
 	ExitCheckBallCollisionWithPlayer1:
 	                                  ret
 CheckBallCollisionWithPlayer1 ENDP
 
+BackGround proc
 
+	                                  mov  di,176
+
+	                                  mov  dx,0
+	                                  mov  al,7
+	                                  mov  ah,0ch
+	                                  mov  bh,0
+	again:                            mov  cx,0
+	back:                             int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back
+	                                  inc  dx
+	                                  cmp  dx,di
+	                                  jnz  again
+
+
+	                                  add  di,4
+	                                  mov  al,0
+	again1:                           mov  cx,0
+	back1:                            int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back1
+	                                  inc  dx
+	                                  cmp  dx,di
+	                                  jnz  again1
+
+	                                  add  di,100
+	                                  mov  al,2
+	again2:                           mov  cx,0
+	back2:                            int  10h
+	                                  inc  cx
+	                                  cmp  cx,640
+	                                  jnz  back2
+	                                  inc  dx
+	                                  cmp  dx,di
+	                                  jnz  again2
+	                                  ret
+
+BackGround endp
 
 END MAIN
