@@ -522,7 +522,7 @@ MAIN PROC FAR
 
 				 
 	GameProcess:                      
-	;call BackGround
+	                                  call BackGround
 	                                  call CheckKeyPressed
 	                                  call DRAWE_PLAYER
 	                                  call Refresh
@@ -799,9 +799,7 @@ CheckBallCollisionWithPlayer1 ENDP
 
 BackGround proc
 
-	                                  mov  di,Player1H
-	                                  add  di,Player1Y
-	                                  sub  di,2
+	                                  mov  di,176
 
 	                                  mov  dx,0
 	                                  mov  al,7
@@ -828,6 +826,7 @@ BackGround proc
 	                                  cmp  dx,di
 	                                  jnz  again1
 
+	                                  add  di,100
 	                                  mov  al,2
 	again2:                           mov  cx,0
 	back2:                            int  10h
@@ -835,7 +834,7 @@ BackGround proc
 	                                  cmp  cx,640
 	                                  jnz  back2
 	                                  inc  dx
-	                                  cmp  dx,400
+	                                  cmp  dx,di
 	                                  jnz  again2
 	                                  ret
 
