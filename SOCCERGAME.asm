@@ -522,7 +522,7 @@ MAIN PROC FAR
 
 				 
 	GameProcess:                      
-	                                  call BackGround
+	;call BackGround
 	                                  call CheckKeyPressed
 	                                  call DRAWE_PLAYER
 	                                  call Refresh
@@ -542,9 +542,9 @@ MAIN ENDP
 
 CheckKeyPressed PROC
 
-ReadKey: 	                          mov  ah,1                             	;Get key pressed Don't Wait for the key
+	ReadKey:                          mov  ah,1                             	;Get key pressed Don't Wait for the key
 	                                  int  16h
-									  jz ExitCheckKeyPressed
+	                                  jz   ExitCheckKeyPressed
 
 	                                  mov  ah,0
 	                                  int  16h
@@ -576,8 +576,10 @@ ReadKey: 	                          mov  ah,1                             	;Get 
 	NoLeft:                           jmp  ReadKey
 
 	MoveRight:                        
+	                                  cmp  Player1X, 553
+	                                  jz   NoRight
 	                                  ADD  Player1X,1
-	                                  jmp  ReadKey
+	NoRight:                          jmp  ReadKey
 
 	ExitCheckKeyPressed:              
 	                                  ret
