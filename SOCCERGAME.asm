@@ -496,11 +496,11 @@
 	GoalKeeperW           equ 30
 	GoalKeeperH           equ 150
 
-	GoalKeeperLeftX       equ 30
-	GoalKeeperLeftY       equ 160
+	GoalKeeperLeftX       equ 13
+	GoalKeeperLeftY       equ 45
 
-	GoalKeeperRightX      equ 500
-	GoalKeeperRightY      equ 160
+	GoalKeeperRightX      equ 600
+	GoalKeeperRightY      equ 45
 
 
 
@@ -554,7 +554,7 @@ MAIN PROC FAR
 				                    
 	GameProcess:                      
 	                                  call BackGround
-	                                  call drawLeftGoalKeeper
+	                                  call drawGoalKeepers
 	                                  call CheckKeyPressed
 	                                  call PlayerGravity
 	                                  call PlayerFall
@@ -941,19 +941,28 @@ BackGround proc
 	                                  ret
 
 BackGround endp
-drawLeftGoalKeeper proc
+drawGoalKeepers proc
 
 	                                  MOV  AH,0Bh                           	;set the configuration
 	                                  MOV  CX, GoalKeeperW                  	;set the width (X) up to 64 (based on image resolution)
 	                                  MOV  DX, GoalKeeperH                  	;set the hieght (Y) up to 64 (based on image resolution)
 	                                  mov  DI, offset LeftGoalKeeper        	; to iterate over the pixels
-	                                  jmp  StartLeft                        
+	                                  jmp  StartLeft
 
 	DrawLeft:                         
 	                                  MOV  AH,0Ch                           	;set the configuration to writing a pixel
 	                                  mov  al, [DI]                         	; color of the current coordinates
+	                                  MOV  BH,00h   
+									  jmp validLeft                        	;set the page number
+	                                  INT  10h                              	;execute the configuration
+
+	validLeft:                           
+	                                  ADD  CX, GoalKeeperLeftX                   	; for shifting in the x -axis
+	                                  ADD  DX, GoalKeeperLeftY                     	; for shifting in the y-axis
 	                                  MOV  BH,00h                           	;set the page number
 	                                  INT  10h                              	;execute the configuration
+	                                  SUB  CX ,GoalKeeperLeftX                     	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB  DX ,GoalKeeperLeftY
 	StartLeft:                        
 	                                  inc  DI
 	                                  DEC  Cx                               	;  loop iteration in x direction
@@ -966,29 +975,38 @@ drawLeftGoalKeeper proc
 	ENDINGLeft:                       
 
 
-	;                                   MOV  AH,0Bh                           	;set the configuration
-	;                                   MOV  CX, GoalKeeperW                  	;set the width (X) up to 64 (based on image resolution)
-	;                                   MOV  DX, GoalKeeperH
-	;                                   mov  DI, offset rightGoalKeeper        	; to iterate over the pixels
-	;                                   jmp  StartRight                        	;Avoid drawing before the calculations
+	                                  MOV  AH,0Bh                           	;set the configuration
+	                                  MOV  CX, GoalKeeperW                  	;set the width (X) up to 64 (based on image resolution)
+	                                  MOV  DX, GoalKeeperH
+	                                  mov  DI, offset rightGoalKeeper        	; to iterate over the pixels
+	                                  jmp  StartRight                        	;Avoid drawing before the calculations
 
-	; DrawRight:                         
-	;                                   MOV  AH,0Ch                           	;set the configuration to writing a pixel
-	;                                   mov  al, [DI]                         	; color of the current coordinates
-	;                                   MOV  BH,00h                           	;set the page number
-	;                                   INT  10h                              	;execute the configuration
-	; StartRight:                        
-	;                                   inc  DI
-	;                                   DEC  Cx                               	;  loop iteration in x direction
-	;                                   JNZ  DrawRight                         	;  check if we can draw c urrent x and y and excape the y iteration
-	;                                   mov  Cx, GoalKeeperW                  	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	;                                   DEC  DX                               	;  loop iteration in y direction
-	;                                   JZ   ENDINGRight                       	;  both x and y reached 00 so end program
-	;                                   Jmp  DrawRight
+	DrawRight:
+	                                  MOV  AH,0Ch                           	;set the configuration to writing a pixel
+	                                  mov  al, [DI]                         	; color of the current coordinates
+	                                  MOV  BH,00h                           	;set the page number
+	                                 jmp validRight                        	;set the page number
+	                                  INT  10h                              	;execute the configuration
 
-	; ENDINGRight:                       
+	validRight:                           
+	                                  ADD  CX, GoalKeeperRightX                   	; for shifting in the x -axis
+	                                  ADD  DX, GoalKeeperRightY                     	; for shifting in the y-axis
+	                                  MOV  BH,00h                           	;set the page number
+	                                  INT  10h                              	;execute the configuration
+	                                  SUB  CX ,GoalKeeperRightX                     	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB  DX ,GoalKeeperRightY
+	StartRight:
+	                                  inc  DI
+	                                  DEC  Cx                               	;  loop iteration in x direction
+	                                  JNZ  DrawRight                         	;  check if we can draw c urrent x and y and excape the y iteration
+	                                  mov  Cx, GoalKeeperW                  	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	                                  DEC  DX                               	;  loop iteration in y direction
+	                                  JZ   ENDINGRight                       	;  both x and y reached 00 so end program
+	                                  Jmp  DrawRight
+
+	ENDINGRight:
 	                                  ret
-drawLeftGoalKeeper endp
+drawGoalKeepers endp
 
 
 END MAIN
