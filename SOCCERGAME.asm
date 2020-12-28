@@ -128,6 +128,33 @@ LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated
 	                                  mov   username[bx], '$'
 ENDM  main_screen
 
+
+print_dashes MACRO y
+LOCAL status_dashes
+	                                  mov         ah,2
+	                                  mov         bh,0
+	                                  mov         dh,y
+
+	                                  mov         dl,-1
+	status_dashes:                    inc         dl
+	                                  int         10h
+	                                  mov         bl,dl
+	                                  mov         dl,'-'
+	                                  int         21h
+	                                  mov         dl,bl
+	                                  cmp         dl,79
+	                                  jnz         status_dashes
+ENDM print_dashes
+
+
+clear_screen MACRO
+mov ax,0600h
+mov bh,07
+mov cx,0
+mov dx,184fh
+int 10h
+ENDM clear_screen
+
 ;________________________________________________________________________________________________________________________________________
 .MODEL SMALL
 .STACK 64
@@ -675,6 +702,10 @@ ENDM  main_screen
 	FractionIncreaseSpeed equ              2
 	;__________________________________________________________________________________________________________________________________________
 
+	player1_score         db               0
+
+	player2_score         db               0
+
 	name_message          db               'Please Enter Your Name:','$'
 
 	enter_key             db               'Press Enter Key to Continue','$'
@@ -691,6 +722,10 @@ ENDM  main_screen
 
 	exit_program_message  db               '*To end the program, press ESC', '$'
 
+	end_game_str          db               'To end the game, Press F4','$'
+
+	score_string          db               "'s Score:",'$'
+
 	                      username1_buffer label byte
 	max_size1             db               16
 	actual_size1          db               ?
@@ -705,237 +740,252 @@ ENDM  main_screen
 .CODE
 MAIN PROC FAR
 
-	                                  mov         ax, @data
-	                                  mov         DS, ax
+	                                  mov          ax, @data
+	                                  mov          DS, ax
 
 	;-------------------------------- main screen
-	                                  main_screen username1_buffer, username1, actual_size1, name_message, enter_key, error_message, p1
-	                                  main_screen username2_buffer, username2, actual_size2, name_message, enter_key, error_message, p2
+	                                  main_screen  username1_buffer, username1, actual_size1, name_message, enter_key, error_message, p1
+	                                  main_screen  username2_buffer, username2, actual_size2, name_message, enter_key, error_message, p2
 
 	;-------------------------------- program functionalities screen
-	                                  call        program_functionalities
+                
+	functionalites:                   mov          ah,0
+	                                  mov          al,3
+	                                  int          10h
+	                                  clear_screen
+	                                  call         program_functionalities
 
 
-	key_specify_action:               mov         ah,1
-	                                  int         16h
-	                                  jz          key_specify_action                                                                   	;check if a key is pressed
+	key_specify_action:               mov          ah,1
+	                                  int          16h
+	                                  jz           key_specify_action                                                                   	;check if a key is pressed
 
-	                                  mov         ah,0
-	                                  int         16h                                                                                  	;get the key
+	                                  mov          ah,0
+	                                  int          16h                                                                                  	;get the key
 
-	                                  cmp         ah,1
-	                                  jz          end_program                                                                          	;if the key is ESC
+	                                  cmp          ah,1
+	                                  jz           end_program                                                                          	;if the key is ESC
 
-	                                  cmp         ah,3ch
-	                                  jz          play_game                                                                            	;if the key is F2
+	                                  cmp          ah,3ch
+	                                  jz           play_game                                                                            	;if the key is F2
 
-	                                  cmp         ah,3bh
-	                                  jz          end_program                                                                          	;if the key is F1 (for chatting) 'This will be changed in the next phase'
+	                                  cmp          ah,3bh
+	                                  jz           end_program                                                                          	;if the key is F1 (for chatting) 'This will be changed in the next phase'
 
-	                                  jmp         key_specify_action
+	                                  jmp          key_specify_action
 
 
-	play_game:                        mov         ax, 4F02h
-	                                  mov         bx, 0100h                                                                            	; 640x400 screen graphics mode
-	                                  INT         10h                                                                                  	;execute the configuration
-
+	play_game:                        mov          ax, 4F02h
+	                                  mov          bx, 0100h                                                                            	; 640x400 screen graphics mode
+	                                  INT          10h                                                                                  	;execute the configuration
 				                    
 	GameProcess:                      
-	                                  call        BackGround
-	                                  call        drawGoalKeepers
-	                                  call        CheckKeyPressed
-	                                  call        PlayerGravity
-	                                  call        PlayerFall
-	                                  call        DRAWE_PLAYERS
-	                                  call        DrawingBall
-	                                  call        CheckBallCollisionWithScreen
-	                                  call        UpdateBallPosition
-	                                  call        CheckBallCollisionWithScreen
-	                                  call        CheckBallCollisionWithPlayer1
+	                                  call         BackGround
+	                                  call         write_player_name
+	                                  call         print_player1_score
+	                                  call         print_player2_score
+	                                  call         game_status_bar
+	                                  call         drawGoalKeepers
+	                                  call         CheckKeyPressed
+	;-------------------------------- to indicate that the user pressed on F4
+	                                  cmp          di,-1
+	                                  jz           functionalites
+	;-------------------------------------------------------------------------
+	                                  call         PlayerGravity
+	                                  call         PlayerFall
+	                                  call         DRAWE_PLAYERS
+	                                  call         DrawingBall
+	                                  call         CheckBallCollisionWithScreen
+	                                  call         UpdateBallPosition
+	                                  call         CheckBallCollisionWithScreen
+	                                  call         CheckBallCollisionWithPlayer1
 	; call delay
-									 
-	
-	                                  jmp         GameProcess
-  
-	end_program:                      mov         ah,4ch
-	                                  int         21h
+
+	                                  jmp          GameProcess
+
+	end_program:                      mov          ah,4ch
+	                                  int          21h
             
 MAIN ENDP
 delay proc
-	                                  mov         di , 00FFFh
-	PASS1:                            MOV         CX   ,1000
-	PASS2:                            LOOP        PASS2
-	                                  DEC         DI
-	                                  JNZ         PASS1
+	                                  mov          di , 00FFFh
+	PASS1:                            MOV          CX   ,1000
+	PASS2:                            LOOP         PASS2
+	                                  DEC          DI
+	                                  JNZ          PASS1
 	                                  ret
 delay ENdP
 PlayerGravity proc near
 
 	;if player y < Gravity line player shuold fall
 	Check_PLAYER1_Gravity:            
-	                                  mov         ax,Player1Y
-	                                  cmp         ax,GravityLine                                                                       	;compare Player_Y coordinates with the gravity line
-	                                  jl          Fall_PLAYE1_Active                                                                   	;if Player_Y coordinates is less this means that the player is above the gravity line
-	                                  jmp         Check_PLAYER2_Gravity
+	                                  mov          ax,Player1Y
+	                                  cmp          ax,GravityLine                                                                       	;compare Player_Y coordinates with the gravity line
+	                                  jl           Fall_PLAYE1_Active                                                                   	;if Player_Y coordinates is less this means that the player is above the gravity line
+	                                  jmp          Check_PLAYER2_Gravity
 
 	Fall_PLAYE1_Active:               
-	                                  mov         ax,1h
-	                                  mov         Player1FallStatus,ax
-	                                  jmp         Check_PLAYER2_Gravity
+	                                  mov          ax,1h
+	                                  mov          Player1FallStatus,ax
+	                                  jmp          Check_PLAYER2_Gravity
 
 	Check_PLAYER2_Gravity:            
-	                                  mov         ax,Player2Y
-	                                  cmp         ax,GravityLine                                                                       	;compare Player_Y coordinates with the gravity line
-	                                  jl          Fall_PLAYE2_Active                                                                   	;if Player_Y coordinates is less this means that the player is above the gravity line
+	                                  mov          ax,Player2Y
+	                                  cmp          ax,GravityLine                                                                       	;compare Player_Y coordinates with the gravity line
+	                                  jl           Fall_PLAYE2_Active                                                                   	;if Player_Y coordinates is less this means that the player is above the gravity line
 	                                  ret
 
 	Fall_PLAYE2_Active:               
-	                                  mov         ax,1h
-	                                  mov         Player2FallStatus,ax
+	                                  mov          ax,1h
+	                                  mov          Player2FallStatus,ax
 	                                  ret
 PlayerGravity endp
 PlayerFall proc    near
-	                                  mov         ax,Player1FallStatus
-	                                  cmp         ax,1h
-	                                  jz          MakePlayer1Down                                                                      	;if player should be falling apply the gravity property
-	                                  jmp         START_PLAYER2_FALING
+	                                  mov          ax,Player1FallStatus
+	                                  cmp          ax,1h
+	                                  jz           MakePlayer1Down                                                                      	;if player should be falling apply the gravity property
+	                                  jmp          START_PLAYER2_FALING
 
 	MakePlayer1Down:                  
-	                                  mov         ax,GravityAccleration
-	                                  add         Player1Y,ax                                                                          	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
-	                                  mov         ax,Player1Y
-	                                  add         ax,Player1H
-	                                  cmp         ax,LandLine                                                                          	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
-	                                  jl          START_PLAYER2_FALING                                                                 	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
-	                                  mov         ax,0h
-	                                  mov         Player1FallStatus,ax
+	                                  mov          ax,GravityAccleration
+	                                  add          Player1Y,ax                                                                          	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
+	                                  mov          ax,Player1Y
+	                                  add          ax,Player1H
+	                                  cmp          ax,LandLine                                                                          	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
+	                                  jl           START_PLAYER2_FALING                                                                 	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
+	                                  mov          ax,0h
+	                                  mov          Player1FallStatus,ax
 	START_PLAYER2_FALING:             
-	                                  mov         ax,Player2FallStatus
-	                                  cmp         ax,1h
-	                                  jz          MakePlayer2Down                                                                      	;if player should be falling apply the gravity property
+	                                  mov          ax,Player2FallStatus
+	                                  cmp          ax,1h
+	                                  jz           MakePlayer2Down                                                                      	;if player should be falling apply the gravity property
 	                                  ret
 
 	MakePlayer2Down:                  
-	                                  mov         ax,GravityAccleration
-	                                  add         Player2Y,ax                                                                          	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
-	                                  mov         ax,Player2Y
-	                                  add         ax,Player2H
-	                                  cmp         ax,LandLine                                                                          	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
-	                                  jl          ENDING                                                                               	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
-	                                  mov         ax,0h
-	                                  mov         Player2FallStatus,ax
+	                                  mov          ax,GravityAccleration
+	                                  add          Player2Y,ax                                                                          	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
+	                                  mov          ax,Player2Y
+	                                  add          ax,Player2H
+	                                  cmp          ax,LandLine                                                                          	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
+	                                  jl           ENDING                                                                               	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
+	                                  mov          ax,0h
+	                                  mov          Player2FallStatus,ax
 	ENDING:                           
 	                                  ret
 PlayerFall endp
 
 CheckKeyPressed PROC
 
-	ReadKey:                          mov         ah,1                                                                                 	;Get key pressed Don't Wait for the key
-	                                  int         16h
-	                                  jz          EXIT
+	ReadKey:                          mov          ah,1                                                                                 	;Get key pressed Don't Wait for the key
+	                                  int          16h
+	                                  jz           EXIT
 
-	                                  mov         ah,0
-	                                  int         16h
+	                                  mov          ah,0
+	                                  int          16h
 
-	                                  cmp         ah,72                                                                                	; Check key pressed the update position
-	                                  jz          MoveUp_PLAYER1
+	                                  cmp          ah,72                                                                                	; Check key pressed the update position
+	                                  jz           MoveUp_PLAYER1
 
-	                                  cmp         ah,75
-	                                  jz          MoveLeft_PLAYER1
+	                                  cmp          ah,75
+	                                  jz           MoveLeft_PLAYER1
 
-	                                  cmp         ah,77
-	                                  jz          MoveRight_PLAYER1
+	                                  cmp          ah,77
+	                                  jz           MoveRight_PLAYER1
 
-	                                  cmp         al,'a'
-	                                  JZ          PLAYER2_LEFT
-	                                  cmp         al,'A'
-	                                  jz          PLAYER2_LEFT
+	                                  cmp          al,'a'
+	                                  JZ           PLAYER2_LEFT
+	                                  cmp          al,'A'
+	                                  jz           PLAYER2_LEFT
 
-	                                  cmp         al,'d'
-	                                  JZ          PLAYER2_RIGHT
-	                                  cmp         al,'D'
-	                                  JZ          PLAYER2_RIGHT
+	                                  cmp          al,'d'
+	                                  JZ           PLAYER2_RIGHT
+	                                  cmp          al,'D'
+	                                  JZ           PLAYER2_RIGHT
 
-	                                  cmp         al,'w'
-	                                  JZ          PLAYER2_UP
-	                                  cmp         al,'W'
-	                                  JZ          PLAYER2_UP
-	                                  JMP         ExitCheckKeyPressed
+	                                  cmp          al,'w'
+	                                  JZ           PLAYER2_UP
+	                                  cmp          al,'W'
+	                                  JZ           PLAYER2_UP
                          
-
-	
+	;-------------------------------- this is for game's exit
+	                                  cmp          ah,3eh
+									  jnz          Exit                                                                   	;F4 key
+	                                  mov          di, -1                                                                               	;to indicate that the game will exit
+	;--------------------------------------------------------
+	                                  JMP          ExitCheckKeyPressed
+	Bridge1: jmp ReadKey
 
 	MoveUp_PLAYER1:                   
-	                                  mov         bx , Player1SpeedY
-	                                  sub         Player1Y  , bx
-	                                  mov         bx  ,Player1Y
-	                                  cmp         bx  ,Window_Bounds
-	                                  jg          ReadKey
-	                                  mov         bx , Player1SpeedY
-	                                  ADD         Player1Y, bx
-	                                  jmp         ReadKey
+	                                  mov          bx , Player1SpeedY
+	                                  sub          Player1Y  , bx
+	                                  mov          bx  ,Player1Y
+	                                  cmp          bx  ,Window_Bounds
+	                                  jg           ReadKey
+	                                  mov          bx , Player1SpeedY
+	                                  ADD          Player1Y, bx
+	                                  jmp          ReadKey
 
 
-	EXIT:                             jmp         ExitCheckKeyPressed
+	EXIT:                             jmp          ExitCheckKeyPressed
 	 
 	MoveLeft_PLAYER1:                 
-	                                  mov         ax , Player1X
-	                                  sub         ax , Player1SpeedX
-	                                  cmp         ax  , Window_Bounds
-	                                  jl          ReadKey
-	                                  mov         bx , Player1SpeedX
-	                                  SUB         Player1X,bx
-	                                  jmp         ReadKey
+	                                  mov          ax , Player1X
+	                                  sub          ax , Player1SpeedX
+	                                  cmp          ax  , Window_Bounds
+	                                  jl           ReadKey
+	                                  mov          bx , Player1SpeedX
+	                                  SUB          Player1X,bx
+	                                  jmp          ReadKey
 
 	MoveRight_PLAYER1:                
-	                                  mov         ax , Player1X
-	                                  add         ax , Player1W
-	                                  add         ax , Player1SpeedX
-	                                  mov         bx ,ScreenW
-	                                  sub         bx , Window_Bounds
-	                                  cmp         ax, bx
-	                                  jg          ReadKey
-	                                  mov         bx , Player1SpeedX
-	                                  ADD         Player1X,bx
-	                                  jmp         ReadKey
+	                                  mov          ax , Player1X
+	                                  add          ax , Player1W
+	                                  add          ax , Player1SpeedX
+	                                  mov          bx ,ScreenW
+	                                  sub          bx , Window_Bounds
+	                                  cmp          ax, bx
+	                                  jg           Bridge1
+	                                  mov          bx , Player1SpeedX
+	                                  ADD          Player1X,bx
+	                                  jmp          ReadKey
 
-	READKEY2:                         jmp         ReadKey
-	PLAYER2_LEFT:                     jmp         MoveLeft_PLAYER2
-	PLAYER2_RIGHT:                    jmp         MoveRight_PLAYER2
-	PLAYER2_UP:                       jmp         MoveUp_PLAYER2
+	READKEY2:                         jmp          ReadKey
+	PLAYER2_LEFT:                     jmp          MoveLeft_PLAYER2
+	PLAYER2_RIGHT:                    jmp          MoveRight_PLAYER2
+	PLAYER2_UP:                       jmp          MoveUp_PLAYER2
 	
 
 	MoveUp_PLAYER2:                   
-	                                  mov         bx , Player2SpeedY
-	                                  sub         Player2Y  , bx
-	                                  mov         bx  ,Player2Y
-	                                  cmp         bx  ,Window_Bounds
-	                                  jg          READKEY2
-	                                  mov         bx , Player2SpeedY
-	                                  ADD         Player2Y, bx
-	                                  jmp         READKEY2
+	                                  mov          bx , Player2SpeedY
+	                                  sub          Player2Y  , bx
+	                                  mov          bx  ,Player2Y
+	                                  cmp          bx  ,Window_Bounds
+	                                  jg           READKEY2
+	                                  mov          bx , Player2SpeedY
+	                                  ADD          Player2Y, bx
+	                                  jmp          READKEY2
 
 
 	MoveLeft_PLAYER2:                 
-	                                  mov         ax , Player2X
-	                                  sub         ax , Player2SpeedX
-	                                  cmp         ax  , Window_Bounds
-	                                  jl          READKEY2
-	                                  mov         bx , Player2SpeedX
-	                                  SUB         Player2X,bx
-	                                  jmp         READKEY2
+	                                  mov          ax , Player2X
+	                                  sub          ax , Player2SpeedX
+	                                  cmp          ax  , Window_Bounds
+	                                  jl           READKEY2
+	                                  mov          bx , Player2SpeedX
+	                                  SUB          Player2X,bx
+	                                  jmp          READKEY2
 
 	MoveRight_PLAYER2:                
-	                                  mov         ax , Player2X
-	                                  add         ax , Player2W
-	                                  add         ax , Player2SpeedX
-	                                  mov         bx ,ScreenW
-	                                  sub         bx , Window_Bounds
-	                                  cmp         ax, bx
-	                                  jg          READKEY2
-	                                  mov         bx , Player2SpeedX
-	                                  ADD         Player2X,bx
-	                                  jmp         READKEY2
+	                                  mov          ax , Player2X
+	                                  add          ax , Player2W
+	                                  add          ax , Player2SpeedX
+	                                  mov          bx ,ScreenW
+	                                  sub          bx , Window_Bounds
+	                                  cmp          ax, bx
+	                                  jg           READKEY2
+	                                  mov          bx , Player2SpeedX
+	                                  ADD          Player2X,bx
+	                                  jmp          READKEY2
 
 
 	ExitCheckKeyPressed:              
@@ -944,60 +994,60 @@ CheckKeyPressed PROC
 CheckKeyPressed ENDP
 
 DRAWE_PLAYERS PROC
-	                                  MOV         AH,0Bh                                                                               	;set the configuration
-	                                  MOV         CX, Player1W                                                                         	;set the width (X) up to 64 (based on image resolution)
-	                                  MOV         DX, Player1H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
-	                                  mov         DI, offset Player1Color                                                              	; to iterate over the pixels
-	                                  jmp         Start1                                                                               	;Avoid drawing before the calculations
+	                                  MOV          AH,0Bh                                                                               	;set the configuration
+	                                  MOV          CX, Player1W                                                                         	;set the width (X) up to 64 (based on image resolution)
+	                                  MOV          DX, Player1H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
+	                                  mov          DI, offset Player1Color                                                              	; to iterate over the pixels
+	                                  jmp          Start1                                                                               	;Avoid drawing before the calculations
 	Draw1:                            
-	                                  MOV         AH,0Ch                                                                               	;set the configuration to writing a pixel
-	                                  mov         al, [DI]                                                                             	; color of the current coordinates
-	                                  cmp         al ,31
-	                                  JNZ         valid1
-	                                  jmp         start1
+	                                  MOV          AH,0Ch                                                                               	;set the configuration to writing a pixel
+	                                  mov          al, [DI]                                                                             	; color of the current coordinates
+	                                  cmp          al ,31
+	                                  JNZ          valid1
+	                                  jmp          start1
 	valid1:                           
-	                                  ADD         CX, Player1X                                                                         	; for shifting in the x -axis
-	                                  ADD         DX, Player1Y                                                                         	; for shifting in the y-axis
-	                                  MOV         BH,00h                                                                               	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
-	                                  SUB         CX ,Player1X                                                                         	; return to our CX to validate our loop which get out in (0 ,0)
-	                                  SUB         DX ,Player1Y
+	                                  ADD          CX, Player1X                                                                         	; for shifting in the x -axis
+	                                  ADD          DX, Player1Y                                                                         	; for shifting in the y-axis
+	                                  MOV          BH,00h                                                                               	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
+	                                  SUB          CX ,Player1X                                                                         	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB          DX ,Player1Y
 	Start1:                           
-	                                  inc         DI
-	                                  DEC         Cx                                                                                   	;  loop iteration in x direction
-	                                  JNZ         Draw1                                                                                	;  check if we can draw c urrent x and y and excape the y iteration
-	                                  mov         Cx, Player1W                                                                         	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	                                  DEC         DX                                                                                   	;  loop iteration in y direction
-	                                  JZ          ENDING1                                                                              	;  both x and y reached 00 so end program
-	                                  Jmp         Draw1
+	                                  inc          DI
+	                                  DEC          Cx                                                                                   	;  loop iteration in x direction
+	                                  JNZ          Draw1                                                                                	;  check if we can draw c urrent x and y and excape the y iteration
+	                                  mov          Cx, Player1W                                                                         	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	                                  DEC          DX                                                                                   	;  loop iteration in y direction
+	                                  JZ           ENDING1                                                                              	;  both x and y reached 00 so end program
+	                                  Jmp          Draw1
 
 	ENDING1:                          
-	                                  MOV         AH,0Bh                                                                               	;set the configuration
-	                                  MOV         CX, Player2W                                                                         	;set the width (X) up to 64 (based on image resolution)
-	                                  MOV         DX, Player2H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
-	                                  mov         DI, offset Player2Color                                                              	; to iterate over the pixels
-	                                  jmp         Start2                                                                               	;Avoid drawing before the calculations
+	                                  MOV          AH,0Bh                                                                               	;set the configuration
+	                                  MOV          CX, Player2W                                                                         	;set the width (X) up to 64 (based on image resolution)
+	                                  MOV          DX, Player2H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
+	                                  mov          DI, offset Player2Color                                                              	; to iterate over the pixels
+	                                  jmp          Start2                                                                               	;Avoid drawing before the calculations
 	Draw2:                            
-	                                  MOV         AH,0Ch                                                                               	;set the configuration to writing a pixel
-	                                  mov         al, [DI]                                                                             	; color of the current coordinates
-	                                  cmp         al ,31
-	                                  JNZ         valid2
-	                                  jmp         start2
+	                                  MOV          AH,0Ch                                                                               	;set the configuration to writing a pixel
+	                                  mov          al, [DI]                                                                             	; color of the current coordinates
+	                                  cmp          al ,31
+	                                  JNZ          valid2
+	                                  jmp          start2
 	valid2:                           
-	                                  ADD         CX, Player2X                                                                         	; for shifting in the x -axis
-	                                  ADD         DX, Player2Y                                                                         	; for shifting in the y-axis
-	                                  MOV         BH,00h                                                                               	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
-	                                  SUB         CX ,Player2X                                                                         	; return to our CX to validate our loop which get out in (0 ,0)
-	                                  SUB         DX ,Player2Y
+	                                  ADD          CX, Player2X                                                                         	; for shifting in the x -axis
+	                                  ADD          DX, Player2Y                                                                         	; for shifting in the y-axis
+	                                  MOV          BH,00h                                                                               	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
+	                                  SUB          CX ,Player2X                                                                         	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB          DX ,Player2Y
 	Start2:                           
-	                                  inc         DI
-	                                  DEC         Cx                                                                                   	;  loop iteration in x direction
-	                                  JNZ         Draw2                                                                                	;  check if we can draw c urrent x and y and excape the y iteration
-	                                  mov         Cx, Player2W                                                                         	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	                                  DEC         DX                                                                                   	;  loop iteration in y direction
-	                                  JZ          ENDING2                                                                              	;  both x and y reached 00 so end program
-	                                  Jmp         Draw2
+	                                  inc          DI
+	                                  DEC          Cx                                                                                   	;  loop iteration in x direction
+	                                  JNZ          Draw2                                                                                	;  check if we can draw c urrent x and y and excape the y iteration
+	                                  mov          Cx, Player2W                                                                         	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	                                  DEC          DX                                                                                   	;  loop iteration in y direction
+	                                  JZ           ENDING2                                                                              	;  both x and y reached 00 so end program
+	                                  Jmp          Draw2
 	ENDING2:                          
 	                                  ret
 DRAWE_PLAYERS ENDP
@@ -1005,28 +1055,28 @@ DRAWE_PLAYERS ENDP
 	
 
 DrawingBall PROC
-	                                  mov         dx,BallY
-	                                  mov         cx,BallX
-	                                  mov         si,offset BallColor                                                                  	;intialize the position & carry
+	                                  mov          dx,BallY
+	                                  mov          cx,BallX
+	                                  mov          si,offset BallColor                                                                  	;intialize the position & carry
 	DrawRow:                          
 
-	                                  mov         al,[si]                                                                              	;mov current color
-	                                  mov         ah,0ch
-	                                  int         10h                                                                                  	;draw pixed mode
+	                                  mov          al,[si]                                                                              	;mov current color
+	                                  mov          ah,0ch
+	                                  int          10h                                                                                  	;draw pixed mode
 
-	                                  inc         cx
-	                                  inc         si
-	                                  mov         di,BallX
-	                                  add         di,BallW
-	                                  cmp         cx,di                                                                                	;check end of current row
-	                                  jNE         DrawRow
+	                                  inc          cx
+	                                  inc          si
+	                                  mov          di,BallX
+	                                  add          di,BallW
+	                                  cmp          cx,di                                                                                	;check end of current row
+	                                  jNE          DrawRow
 
-	                                  mov         cx,BallX
-	                                  inc         dx
-	                                  mov         di,BallY
-	                                  add         di,BallH
-	                                  cmp         dx,di
-	                                  JNE         DrawRow                                                                              	;check end of all rows
+	                                  mov          cx,BallX
+	                                  inc          dx
+	                                  mov          di,BallY
+	                                  add          di,BallH
+	                                  cmp          dx,di
+	                                  JNE          DrawRow                                                                              	;check end of all rows
 
 	                                  ret
 DrawingBall ENDP
@@ -1036,46 +1086,46 @@ CheckBallCollisionWithScreen PROC
 
 
 	;check collision with right edge of the screen
-	                                  mov         Ax,BallX
-	                                  add         Ax,BallW
-	                                  cmp         Ax,ScreenW
+	                                  mov          Ax,BallX
+	                                  add          Ax,BallW
+	                                  cmp          Ax,ScreenW
     
-	                                  JNG         NoCollisionWithRightEdge
-	                                  cmp         BallSpeedx,0
-	                                  JE          NoCollisionWithRightEdge
-	                                  NEG         BallSpeedX
-	                                  add         BallSpeedx,FractionDecreaseSpeed
+	                                  JNG          NoCollisionWithRightEdge
+	                                  cmp          BallSpeedx,0
+	                                  JE           NoCollisionWithRightEdge
+	                                  NEG          BallSpeedX
+	                                  add          BallSpeedx,FractionDecreaseSpeed
 	NoCollisionWithRightEdge:         
 
 	;check collision with left edge of the screen
-	                                  mov         Ax,BallX
-	                                  cmp         Ax,0
-	                                  JNL         NoCollisionWithLeftEdge
-	                                  cmp         BallSpeedx,0
-	                                  JE          NoCollisionWithLeftEdge
-	                                  NEG         BallSpeedx
-	                                  sub         BallSpeedx,FractionDecreaseSpeed
+	                                  mov          Ax,BallX
+	                                  cmp          Ax,0
+	                                  JNL          NoCollisionWithLeftEdge
+	                                  cmp          BallSpeedx,0
+	                                  JE           NoCollisionWithLeftEdge
+	                                  NEG          BallSpeedx
+	                                  sub          BallSpeedx,FractionDecreaseSpeed
 	NoCollisionWithLeftEdge:          
 
 	;check collision with upper edge of the screen
-	                                  mov         Ax,BallY
-	                                  cmp         Ax,0
-	                                  JNL         NoCollisionWithUpperEdge
-	                                  cmp         BallSpeedY,0
-	                                  JE          NoCollisionWithUpperEdge
-	                                  NEG         BallSpeedY
-	                                  sub         BallSpeedY,FractionDecreaseSpeed
+	                                  mov          Ax,BallY
+	                                  cmp          Ax,0
+	                                  JNL          NoCollisionWithUpperEdge
+	                                  cmp          BallSpeedY,0
+	                                  JE           NoCollisionWithUpperEdge
+	                                  NEG          BallSpeedY
+	                                  sub          BallSpeedY,FractionDecreaseSpeed
 	NoCollisionWithUpperEdge:         
 
 	;check collision with lower edge of the screen
-	                                  mov         Ax,BallY
-	                                  add         Ax,BallH
-	                                  cmp         Ax,ScreenH
-	                                  JNG         NoCollisionWithLowerEdge
-	                                  cmp         BallSpeedY,0
-	                                  JE          NoCollisionWithLowerEdge
-	                                  NEG         BallSpeedY
-	                                  add         BallSpeedY,FractionDecreaseSpeed
+	                                  mov          Ax,BallY
+	                                  add          Ax,BallH
+	                                  cmp          Ax,ScreenH
+	                                  JNG          NoCollisionWithLowerEdge
+	                                  cmp          BallSpeedY,0
+	                                  JE           NoCollisionWithLowerEdge
+	                                  NEG          BallSpeedY
+	                                  add          BallSpeedY,FractionDecreaseSpeed
 	NoCollisionWithLowerEdge:         
 
 CheckBallCollisionWithScreen ENDP
@@ -1085,19 +1135,19 @@ UpdateBallPosition PROC
 	;check if a player has hit the ball and still the ball is affected
 	NoAffectOfLastPlayerShoot:        
 	;add gravity affect
-	                                  mov         Ax,Gravity
-	                                  add         BallSpeedY,Ax
-	                                  mov         Ax,BallSpeedX
-	                                  add         BallX,Ax
-	                                  mov         Ax,BallSpeedY
-	                                  add         BallY,Ax
+	                                  mov          Ax,Gravity
+	                                  add          BallSpeedY,Ax
+	                                  mov          Ax,BallSpeedX
+	                                  add          BallX,Ax
+	                                  mov          Ax,BallSpeedY
+	                                  add          BallY,Ax
 	;check if ballY crossed the lower limit
-	                                  mov         Ax,ScreenH
-	                                  sub         Ax,BallH
-	                                  inc         Ax
-	                                  cmp         BallY,Ax
-	                                  JNG         ExitUpdateBallPosition
-	                                  mov         BallY,Ax
+	                                  mov          Ax,ScreenH
+	                                  sub          Ax,BallH
+	                                  inc          Ax
+	                                  cmp          BallY,Ax
+	                                  JNG          ExitUpdateBallPosition
+	                                  mov          BallY,Ax
 	ExitUpdateBallPosition:           
 	                                  ret
 UpdateBallPosition ENDP
@@ -1105,12 +1155,12 @@ UpdateBallPosition ENDP
 	;description
 UpdatePlayer1Position PROC
 
-	                                  mov         Bx,ScreenH
-	                                  sub         Bx,Player1H
-	                                  cmp         Player1Y,Bx
-	                                  JE          ExitUpdatePlayer1Position
-	                                  mov         Ax,Player1SpeedY
-	                                  add         Player1Y,Ax
+	                                  mov          Bx,ScreenH
+	                                  sub          Bx,Player1H
+	                                  cmp          Player1Y,Bx
+	                                  JE           ExitUpdatePlayer1Position
+	                                  mov          Ax,Player1SpeedY
+	                                  add          Player1Y,Ax
 	
 	ExitUpdatePlayer1Position:        
 	                                  ret
@@ -1119,45 +1169,45 @@ UpdatePlayer1Position ENDP
 	;description
 CheckBallCollisionWithPlayer1 PROC
 	;first check the x axis maxx1>minx2 && maxx2>minx1
-	                                  mov         Ax,BallX
-	                                  add         Ax,BallW
-	                                  mov         Bx ,Player1X
-	                                  cmp         Ax,Bx
-	                                  JNG         ExitCheckBallCollisionWithPlayer1
+	                                  mov          Ax,BallX
+	                                  add          Ax,BallW
+	                                  mov          Bx ,Player1X
+	                                  cmp          Ax,Bx
+	                                  JNG          ExitCheckBallCollisionWithPlayer1
 
-	                                  mov         Ax,Player1X
-	                                  add         Ax,Player1W
-	                                  mov         Bx,BallX
-	                                  cmp         Ax,Bx
-	                                  JNG         ExitCheckBallCollisionWithPlayer1
+	                                  mov          Ax,Player1X
+	                                  add          Ax,Player1W
+	                                  mov          Bx,BallX
+	                                  cmp          Ax,Bx
+	                                  JNG          ExitCheckBallCollisionWithPlayer1
 
 	;first check the y axis maxy1>miny2 && maxy2>miny1
 
-	                                  mov         Ax,BallY
-	                                  add         Ax,BallH
-	                                  mov         Bx ,Player1Y
-	                                  cmp         Ax,Bx
-	                                  JNG         ExitCheckBallCollisionWithPlayer1
+	                                  mov          Ax,BallY
+	                                  add          Ax,BallH
+	                                  mov          Bx ,Player1Y
+	                                  cmp          Ax,Bx
+	                                  JNG          ExitCheckBallCollisionWithPlayer1
 
-	                                  mov         Ax,Player1Y
-	                                  add         Ax,Player1H
-	                                  mov         Bx,BallY
-	                                  cmp         Ax,Bx
-	                                  JNG         ExitCheckBallCollisionWithPlayer1
+	                                  mov          Ax,Player1Y
+	                                  add          Ax,Player1H
+	                                  mov          Bx,BallY
+	                                  cmp          Ax,Bx
+	                                  JNG          ExitCheckBallCollisionWithPlayer1
 
-	                                  NEG         BallSpeedX
-	                                  NEG         BallSpeedY
+	                                  NEG          BallSpeedX
+	                                  NEG          BallSpeedY
 	;increase ballspeed in both direction due to colision
-	                                  add         BallSpeedY,10
-	                                  mov         Ax,Player1X
-	                                  add         Ax,Player1W
-	                                  mov         Bx,BallX
-	                                  add         Bx,BallW
-	                                  cmp         Ax,Bx
-	                                  JL          Player1IsOnLeft
-	                                  sub         BallSpeedX,5
-	                                  jmp         ExitCheckBallCollisionWithPlayer1
-	Player1IsOnLeft:                  add         BallSpeedX,5
+	                                  add          BallSpeedY,10
+	                                  mov          Ax,Player1X
+	                                  add          Ax,Player1W
+	                                  mov          Bx,BallX
+	                                  add          Bx,BallW
+	                                  cmp          Ax,Bx
+	                                  JL           Player1IsOnLeft
+	                                  sub          BallSpeedX,5
+	                                  jmp          ExitCheckBallCollisionWithPlayer1
+	Player1IsOnLeft:                  add          BallSpeedX,5
 
 	ExitCheckBallCollisionWithPlayer1:
 	                                  ret
@@ -1167,173 +1217,262 @@ CheckBallCollisionWithPlayer1 ENDP
 
 BackGround proc
 
-	                                  mov         di,196
+	                                  mov          di,196
 
-	                                  mov         dx,0
-	                                  mov         al,7
-	                                  mov         ah,0ch
-	                                  mov         bh,0
-	again:                            mov         cx,0
-	back:                             int         10h
-	                                  inc         cx
-	                                  cmp         cx,640
-	                                  jnz         back
-	                                  inc         dx
-	                                  cmp         dx,di
-	                                  jnz         again
+	                                  mov          dx,0
+	                                  mov          al,7
+	                                  mov          ah,0ch
+	                                  mov          bh,0
+	again:                            mov          cx,0
+	back:                             int          10h
+	                                  inc          cx
+	                                  cmp          cx,640
+	                                  jnz          back
+	                                  inc          dx
+	                                  cmp          dx,di
+	                                  jnz          again
 
 
-	                                  add         di,4
-	                                  mov         al,0
-	again1:                           mov         cx,0
-	back1:                            int         10h
-	                                  inc         cx
-	                                  cmp         cx,640
-	                                  jnz         back1
-	                                  inc         dx
-	                                  cmp         dx,di
-	                                  jnz         again1
+	                                  add          di,4
+	                                  mov          al,0
+	again1:                           mov          cx,0
+	back1:                            int          10h
+	                                  inc          cx
+	                                  cmp          cx,640
+	                                  jnz          back1
+	                                  inc          dx
+	                                  cmp          dx,di
+	                                  jnz          again1
 
-	                                  add         di,80
-	                                  mov         al,2
-	again2:                           mov         cx,0
-	back2:                            int         10h
-	                                  inc         cx
-	                                  cmp         cx,640
-	                                  jnz         back2
-	                                  inc         dx
-	                                  cmp         dx,di
-	                                  jnz         again2
+	                                  add          di,80
+	                                  mov          al,2
+	again2:                           mov          cx,0
+	back2:                            int          10h
+	                                  inc          cx
+	                                  cmp          cx,640
+	                                  jnz          back2
+	                                  inc          dx
+	                                  cmp          dx,di
+	                                  jnz          again2
+
+
 	                                  ret
 
 BackGround endp
 drawGoalKeepers proc
 
-	                                  MOV         AH,0Bh                                                                               	;set the configuration
-	                                  MOV         CX, GoalKeeperW                                                                      	;set the width (X) up to 64 (based on image resolution)
-	                                  MOV         DX, GoalKeeperH                                                                      	;set the hieght (Y) up to 64 (based on image resolution)
-	                                  mov         DI, offset LeftGoalKeeper                                                            	; to iterate over the pixels
-	                                  jmp         StartLeft
+	                                  MOV          AH,0Bh                                                                               	;set the configuration
+	                                  MOV          CX, GoalKeeperW                                                                      	;set the width (X) up to 64 (based on image resolution)
+	                                  MOV          DX, GoalKeeperH                                                                      	;set the hieght (Y) up to 64 (based on image resolution)
+	                                  mov          DI, offset LeftGoalKeeper                                                            	; to iterate over the pixels
+	                                  jmp          StartLeft
 
 	DrawLeft:                         
-	                                  MOV         AH,0Ch                                                                               	;set the configuration to writing a pixel
-	                                  mov         al, [DI]                                                                             	; color of the current coordinates
-	                                  MOV         BH,00h
-	                                  jmp         validLeft                                                                            	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
+	                                  MOV          AH,0Ch                                                                               	;set the configuration to writing a pixel
+	                                  mov          al, [DI]                                                                             	; color of the current coordinates
+	                                  MOV          BH,00h
+	                                  jmp          validLeft                                                                            	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
 
 	validLeft:                        
-	                                  ADD         CX, GoalKeeperLeftX                                                                  	; for shifting in the x -axis
-	                                  ADD         DX, GoalKeeperLeftY                                                                  	; for shifting in the y-axis
-	                                  MOV         BH,00h                                                                               	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
-	                                  SUB         CX ,GoalKeeperLeftX                                                                  	; return to our CX to validate our loop which get out in (0 ,0)
-	                                  SUB         DX ,GoalKeeperLeftY
+	                                  ADD          CX, GoalKeeperLeftX                                                                  	; for shifting in the x -axis
+	                                  ADD          DX, GoalKeeperLeftY                                                                  	; for shifting in the y-axis
+	                                  MOV          BH,00h                                                                               	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
+	                                  SUB          CX ,GoalKeeperLeftX                                                                  	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB          DX ,GoalKeeperLeftY
 	StartLeft:                        
-	                                  inc         DI
-	                                  DEC         Cx                                                                                   	;  loop iteration in x direction
-	                                  JNZ         DrawLeft                                                                             	;  check if we can draw current x and y and excape the y iteration
-	                                  mov         Cx, GoalKeeperW                                                                      	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	                                  DEC         DX                                                                                   	;  loop iteration in y direction
-	                                  JZ          ENDINGLeft                                                                           	;  both x and y reached 00 so end program
-	                                  Jmp         DrawLeft
+	                                  inc          DI
+	                                  DEC          Cx                                                                                   	;  loop iteration in x direction
+	                                  JNZ          DrawLeft                                                                             	;  check if we can draw current x and y and excape the y iteration
+	                                  mov          Cx, GoalKeeperW                                                                      	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	                                  DEC          DX                                                                                   	;  loop iteration in y direction
+	                                  JZ           ENDINGLeft                                                                           	;  both x and y reached 00 so end program
+	                                  Jmp          DrawLeft
 
 	ENDINGLeft:                       
 
 
-	                                  MOV         AH,0Bh                                                                               	;set the configuration
-	                                  MOV         CX, GoalKeeperW                                                                      	;set the width (X) up to 64 (based on image resolution)
-	                                  MOV         DX, GoalKeeperH
-	                                  mov         DI, offset rightGoalKeeper                                                           	; to iterate over the pixels
-	                                  jmp         StartRight                                                                           	;Avoid drawing before the calculations
+	                                  MOV          AH,0Bh                                                                               	;set the configuration
+	                                  MOV          CX, GoalKeeperW                                                                      	;set the width (X) up to 64 (based on image resolution)
+	                                  MOV          DX, GoalKeeperH
+	                                  mov          DI, offset rightGoalKeeper                                                           	; to iterate over the pixels
+	                                  jmp          StartRight                                                                           	;Avoid drawing before the calculations
 
 	DrawRight:                        
-	                                  MOV         AH,0Ch                                                                               	;set the configuration to writing a pixel
-	                                  mov         al, [DI]                                                                             	; color of the current coordinates
-	                                  MOV         BH,00h                                                                               	;set the page number
-	                                  jmp         validRight                                                                           	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
+	                                  MOV          AH,0Ch                                                                               	;set the configuration to writing a pixel
+	                                  mov          al, [DI]                                                                             	; color of the current coordinates
+	                                  MOV          BH,00h                                                                               	;set the page number
+	                                  jmp          validRight                                                                           	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
 
 	validRight:                       
-	                                  ADD         CX, GoalKeeperRightX                                                                 	; for shifting in the x -axis
-	                                  ADD         DX, GoalKeeperRightY                                                                 	; for shifting in the y-axis
-	                                  MOV         BH,00h                                                                               	;set the page number
-	                                  INT         10h                                                                                  	;execute the configuration
-	                                  SUB         CX ,GoalKeeperRightX                                                                 	; return to our CX to validate our loop which get out in (0 ,0)
-	                                  SUB         DX ,GoalKeeperRightY
+	                                  ADD          CX, GoalKeeperRightX                                                                 	; for shifting in the x -axis
+	                                  ADD          DX, GoalKeeperRightY                                                                 	; for shifting in the y-axis
+	                                  MOV          BH,00h                                                                               	;set the page number
+	                                  INT          10h                                                                                  	;execute the configuration
+	                                  SUB          CX ,GoalKeeperRightX                                                                 	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB          DX ,GoalKeeperRightY
 	StartRight:                       
-	                                  inc         DI
-	                                  DEC         Cx                                                                                   	;  loop iteration in x direction
-	                                  JNZ         DrawRight                                                                            	;  check if we can draw c urrent x and y and excape the y iteration
-	                                  mov         Cx, GoalKeeperW                                                                      	;  if loop iteration in y direction, then x should start over so that we sweep the grid
-	                                  DEC         DX                                                                                   	;  loop iteration in y direction
-	                                  JZ          ENDINGRight                                                                          	;  both x and y reached 00 so end program
-	                                  Jmp         DrawRight
+	                                  inc          DI
+	                                  DEC          Cx                                                                                   	;  loop iteration in x direction
+	                                  JNZ          DrawRight                                                                            	;  check if we can draw c urrent x and y and excape the y iteration
+	                                  mov          Cx, GoalKeeperW                                                                      	;  if loop iteration in y direction, then x should start over so that we sweep the grid
+	                                  DEC          DX                                                                                   	;  loop iteration in y direction
+	                                  JZ           ENDINGRight                                                                          	;  both x and y reached 00 so end program
+	                                  Jmp          DrawRight
 
 	ENDINGRight:                      
 	                                  ret
 drawGoalKeepers endp
 
 program_functionalities proc
-	;-------------------------------- clear screen
-	                                  mov         ax,0600h
-	                                  mov         bh,07
-	                                  mov         cx,0
-	                                  mov         dx,184fh
-	                                  int         10h
 
 	;-------------------------------- move cursor
-	                                  mov         ah,2
-	                                  mov         dl,25
-	                                  mov         dh,10
-	                                  mov         bh,0
-	                                  int         10h
+	                                  mov          ah,2
+	                                  mov          dl,25
+	                                  mov          dh,10
+	                                  mov          bh,0
+	                                  int          10h
 
 	;-------------------------------- print chatting message
-	                                  mov         dx,offset chatting_message
-	                                  mov         ah,9
-	                                  int         21h
+	                                  mov          dx,offset chatting_message
+	                                  mov          ah,9
+	                                  int          21h
 
 	;-------------------------------- move cursor
-	                                  mov         ah,2
-	                                  mov         dl,25
-	                                  mov         dh,12
-	                                  mov         bh,0
-	                                  int         10h
+	                                  mov          ah,2
+	                                  mov          dl,25
+	                                  mov          dh,12
+	                                  mov          bh,0
+	                                  int          10h
 
 	;-------------------------------- print game message
-	                                  mov         dx,offset game_message
-	                                  mov         ah,9
-	                                  int         21h
+	                                  mov          dx,offset game_message
+	                                  mov          ah,9
+	                                  int          21h
 
 	;-------------------------------- move cursor
-	                                  mov         ah,2
-	                                  mov         dl,25
-	                                  mov         dh,14
-	                                  mov         bh,0
-	                                  int         10h
+	                                  mov          ah,2
+	                                  mov          dl,25
+	                                  mov          dh,14
+	                                  mov          bh,0
+	                                  int          10h
 
 	;-------------------------------- print exit program message
-	                                  mov         dx,offset exit_program_message
-	                                  mov         ah,9
-	                                  int         21h
+	                                  mov          dx,offset exit_program_message
+	                                  mov          ah,9
+	                                  int          21h
 
 	;-------------------------------- status bar
-	                                  mov         ah,2
-	                                  mov         bh,0
-	                                  mov         dh,22
-
-	                                  mov         dl,-1
-	status_dashes:                    inc         dl
-	                                  int         10h
-	                                  mov         bl,dl
-	                                  mov         dl,'-'
-	                                  int         21h
-	                                  mov         dl,bl
-	                                  cmp         dl,79
-	                                  jnz         status_dashes
+	                                  print_dashes 22
 	                                  ret
 program_functionalities endp
+
+
+write_player_name proc
+	;-------------------------------- move cursor
+	                                  mov          ah,2
+	                                  mov          dl,1
+	                                  mov          dh,18
+	                                  mov          bh,0
+	                                  int          10h
+
+	;-------------------------------- print first player's name
+	                                  mov          dx,offset username1
+	                                  mov          ah,9
+	                                  int          21h
+
+	;-------------------------------- print score string ('s Score)
+	                                  mov          dx, offset score_string
+	                                  int          21h
+
+	;-------------------------------- calculate the dimensions of the second player's name plus the scor string
+	                                  mov          bl,actual_size2
+	                                  add          bl,12
+
+	;-------------------------------- move cursor
+	                                  mov          ah,2
+	                                  mov          dh,18
+	                                  mov          dl,80
+	                                  sub          dl, bl
+	                                  mov          bh,0
+	                                  int          10h
+
+	;-------------------------------- print the second's player name
+	                                  mov          dx,offset username2
+	                                  mov          ah,9
+	                                  int          21h
+
+	                                  mov          dx, offset score_string
+	                                  int          21h
+
+	;-------------------------------- print dashes at y = 19
+	                                  print_dashes 19
+
+	;-------------------------------- move cursor to the last line
+	                                  mov          ah,2
+	                                  mov          dl,0
+	                                  mov          dh,24
+	                                  mov          bh,0
+	                                  int          10h
+
+	;------------------------------------ print the end game string
+	                                  mov          dx,offset end_game_str
+	                                  mov          ah,9
+	                                  int          21h
+
+	                                  ret
+
+write_player_name endp
+
+
+print_player1_score proc
+
+	;-------------------------------- move cursor
+	                                  mov          ah,2
+	                                  mov          dh,18
+	                                  mov          dl,actual_size1
+	                                  add          dl,11
+	                                  mov          bh,0
+	                                  int          10h
+
+	;-------------------------------- print score
+	                                  mov          dl, player1_score
+	                                  add          dl,30h
+	                                  mov          ah,2
+	                                  int          21h
+
+	                                  ret
+print_player1_score endp
+
+
+
+print_player2_score proc
+
+	;------------------------------------ move cursor
+	                                  mov          ah,2
+	                                  mov          dh,18
+	                                  mov          dl,78
+	                                  mov          bh,0
+	                                  int          10h
+
+	;------------------------------------ print score
+	                                  mov          dl, player2_score
+	                                  add          dl,30h
+	                                  mov          ah,2
+	                                  int          21h
+
+	                                  ret
+print_player2_score endp
+
+
+
+game_status_bar proc
+	                                  print_dashes 23
+
+	                                  ret
+
+game_status_bar endp
+
 END MAIN
-
-
