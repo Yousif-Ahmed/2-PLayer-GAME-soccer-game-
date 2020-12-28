@@ -496,7 +496,7 @@
 	GoalKeeperW           equ 30
 	GoalKeeperH           equ 150
 
-	GoalKeeperLeftX       equ 13
+	GoalKeeperLeftX       equ 10
 	GoalKeeperLeftY       equ 45
 
 	GoalKeeperRightX      equ 600
@@ -530,12 +530,14 @@
 
 	ScreenH               equ 196
 	SCreenW               equ 640
-	Window_Bounds         dw  6
+	Window_Bounds         dw  40
 	;Gravity Variables
 	GravityLine           dw  90                                                                                                                                                             	;the highest height the player can reach
 	LandLine              dw  5                                                                                                                                                              	;the lowest height the player can reach
 	GravityAccleration    dw  15d
-	PlayerFallStatus      dw  0
+
+	Player1FallStatus     dw  0
+	Player2FallStatus     dw  0
 
 	Gravity               equ 1                                                                                                                                                              	;gravity acceleration
 	FractionDecreaseSpeed equ 1                                                                                                                                                              	;speed loss due to faction between ball and walls
@@ -564,7 +566,7 @@ MAIN PROC FAR
 	                                  call UpdateBallPosition
 	                                  call CheckBallCollisionWithScreen
 	                                  call CheckBallCollisionWithPlayer1
-	                                  call delay
+	; call delay
 									 
 	
 	                                  jmp  GameProcess
@@ -584,35 +586,59 @@ delay ENdP
 PlayerGravity proc near
 
 	;if player y < Gravity line player shuold fall
-	CheckGravity:                     
+	Check_PLAYER1_Gravity:            
 	                                  mov  ax,Player1Y
 	                                  cmp  ax,GravityLine                   	;compare Player_Y coordinates with the gravity line
-	                                  jl   FallActive                       	;if Player_Y coordinates is less this means that the player is above the gravity line
+	                                  jl   Fall_PLAYE1_Active               	;if Player_Y coordinates is less this means that the player is above the gravity line
+	                                  jmp  Check_PLAYER2_Gravity
+
+	Fall_PLAYE1_Active:               
+	                                  mov  ax,1h
+	                                  mov  Player1FallStatus,ax
+	                                  jmp  Check_PLAYER2_Gravity
+
+	Check_PLAYER2_Gravity:            
+	                                  mov  ax,Player2Y
+	                                  cmp  ax,GravityLine                   	;compare Player_Y coordinates with the gravity line
+	                                  jl   Fall_PLAYE2_Active               	;if Player_Y coordinates is less this means that the player is above the gravity line
 	                                  ret
 
-	FallActive:                       
+	Fall_PLAYE2_Active:               
 	                                  mov  ax,1h
-	                                  mov  PlayerFallStatus,ax
+	                                  mov  Player2FallStatus,ax
 	                                  ret
 PlayerGravity endp
 PlayerFall proc    near
-	                                  mov  ax,PlayerFallStatus
+	                                  mov  ax,Player1FallStatus
 	                                  cmp  ax,1h
-	                                  jz   MakePlayerDown                   	;if player should be falling apply the gravity property
-	                                  ret
+	                                  jz   MakePlayer1Down                  	;if player should be falling apply the gravity property
+	                                  jmp  START_PLAYER2_FALING
 
-	MakePlayerDown:                   
+	MakePlayer1Down:                  
 	                                  mov  ax,GravityAccleration
 	                                  add  Player1Y,ax                      	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
-
 	                                  mov  ax,Player1Y
 	                                  add  ax,Player1H
-	                                  cmp  ax,LandLine                      	;if the player reachs the land we should unable the gravity property
-	;this line also compare the lowest object y coordinate with the land line
-	                                  jl   FinishFalling                    	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
+	                                  cmp  ax,LandLine                      	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
+	                                  jl   START_PLAYER2_FALING             	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
 	                                  mov  ax,0h
-	                                  mov  PlayerFallStatus,ax
-	FinishFalling:                    
+	                                  mov  Player1FallStatus,ax
+	START_PLAYER2_FALING:             
+	                                  mov  ax,Player2FallStatus
+	                                  cmp  ax,1h
+	                                  jz   MakePlayer2Down                 	;if player should be falling apply the gravity property
+	                                  ret
+
+	MakePlayer2Down:                 
+	                                  mov  ax,GravityAccleration
+	                                  add  Player2Y,ax                      	;this apply the gravity property by adding the gravity accleration to the object Y coordinate
+	                                  mov  ax,Player2Y
+	                                  add  ax,Player2H
+	                                  cmp  ax,LandLine                      	;if the player reachs the land we should unable the gravity property                                                                              	;this line also compare the lowest object y coordinate with the land line
+	                                  jl   ENDING                           	;if the lowest object y coordinate is less than the land line means the object still above it and shall fall
+	                                  mov  ax,0h
+	                                  mov  Player2FallStatus,ax
+	ENDING:                           
 	                                  ret
 PlayerFall endp
 
@@ -620,57 +646,111 @@ CheckKeyPressed PROC
 
 	ReadKey:                          mov  ah,1                             	;Get key pressed Don't Wait for the key
 	                                  int  16h
-	                                  jz   ExitCheckKeyPressed
+	                                  jz   EXIT
 
 	                                  mov  ah,0
 	                                  int  16h
 
 	                                  cmp  ah,72                            	; Check key pressed the update position
-	                                  jz   MoveUp
+	                                  jz   MoveUp_PLAYER1
 
 	                                  cmp  ah,75
-	                                  jz   MoveLeft
+	                                  jz   MoveLeft_PLAYER1
 
 	                                  cmp  ah,77
-	                                  jz   MoveRight
+	                                  jz   MoveRight_PLAYER1
 
-	                                  jmp  ExitCheckKeyPressed
+	                                  cmp  al,'a'
+	                                  JZ   PLAYER2_LEFT
+	                                  cmp  al,'A'
+	                                  jz   PLAYER2_LEFT
+
+	                                  cmp  al,'d'
+	                                  JZ   PLAYER2_RIGHT
+	                                  cmp  al,'D'
+	                                  JZ   PLAYER2_RIGHT
+
+	                                  cmp  al,'w'
+	                                  JZ   PLAYER2_UP
+	                                  cmp  al,'W'
+	                                  JZ   PLAYER2_UP
+	                                  JMP  ExitCheckKeyPressed
                          
 
 	
 
-	MoveUp:                           
+	MoveUp_PLAYER1:                   
 	                                  mov  bx , Player1SpeedY
 	                                  sub  Player1Y  , bx
 	                                  mov  bx  ,Player1Y
 	                                  cmp  bx  ,Window_Bounds
-	                                  jg   nomoveup
+	                                  jg   ReadKey
 	                                  mov  bx , Player1SpeedY
 	                                  ADD  Player1Y, bx
-	nomoveup:                         jmp  ReadKey
+	                                  jmp  ReadKey
 
 
-
-	MoveLeft:                         
+	EXIT:                             jmp  ExitCheckKeyPressed
+	 
+	MoveLeft_PLAYER1:                 
 	                                  mov  ax , Player1X
 	                                  sub  ax , Player1SpeedX
 	                                  cmp  ax  , Window_Bounds
-	                                  jl   NoLeft
+	                                  jl   ReadKey
 	                                  mov  bx , Player1SpeedX
 	                                  SUB  Player1X,bx
-	NoLeft:                           jmp  ReadKey
+	                                  jmp  ReadKey
 
-	MoveRight:                        
+	MoveRight_PLAYER1:                
 	                                  mov  ax , Player1X
 	                                  add  ax , Player1W
 	                                  add  ax , Player1SpeedX
 	                                  mov  bx ,ScreenW
 	                                  sub  bx , Window_Bounds
 	                                  cmp  ax, bx
-	                                  jg   NoRight
+	                                  jg   ReadKey
 	                                  mov  bx , Player1SpeedX
 	                                  ADD  Player1X,bx
-	NoRight:                          jmp  ReadKey
+	                                  jmp  ReadKey
+
+	READKEY2:                         jmp  ReadKey
+	PLAYER2_LEFT:                     jmp  MoveLeft_PLAYER2
+	PLAYER2_RIGHT:                    jmp  MoveRight_PLAYER2
+	PLAYER2_UP:                       jmp  MoveUp_PLAYER2
+	
+
+	MoveUp_PLAYER2:                   
+	                                  mov  bx , Player2SpeedY
+	                                  sub  Player2Y  , bx
+	                                  mov  bx  ,Player2Y
+	                                  cmp  bx  ,Window_Bounds
+	                                  jg   READKEY2
+	                                  mov  bx , Player2SpeedY
+	                                  ADD  Player2Y, bx
+	                                  jmp  READKEY2
+
+
+	MoveLeft_PLAYER2:                 
+	                                  mov  ax , Player2X
+	                                  sub  ax , Player2SpeedX
+	                                  cmp  ax  , Window_Bounds
+	                                  jl   READKEY2
+	                                  mov  bx , Player2SpeedX
+	                                  SUB  Player2X,bx
+	                                  jmp  READKEY2
+
+	MoveRight_PLAYER2:                
+	                                  mov  ax , Player2X
+	                                  add  ax , Player2W
+	                                  add  ax , Player2SpeedX
+	                                  mov  bx ,ScreenW
+	                                  sub  bx , Window_Bounds
+	                                  cmp  ax, bx
+	                                  jg   READKEY2
+	                                  mov  bx , Player2SpeedX
+	                                  ADD  Player2X,bx
+	                                  jmp  READKEY2
+
 
 	ExitCheckKeyPressed:              
 	                                  ret
@@ -952,16 +1032,16 @@ drawGoalKeepers proc
 	DrawLeft:                         
 	                                  MOV  AH,0Ch                           	;set the configuration to writing a pixel
 	                                  mov  al, [DI]                         	; color of the current coordinates
-	                                  MOV  BH,00h   
-									  jmp validLeft                        	;set the page number
+	                                  MOV  BH,00h
+	                                  jmp  validLeft                        	;set the page number
 	                                  INT  10h                              	;execute the configuration
 
-	validLeft:                           
-	                                  ADD  CX, GoalKeeperLeftX                   	; for shifting in the x -axis
-	                                  ADD  DX, GoalKeeperLeftY                     	; for shifting in the y-axis
+	validLeft:                        
+	                                  ADD  CX, GoalKeeperLeftX              	; for shifting in the x -axis
+	                                  ADD  DX, GoalKeeperLeftY              	; for shifting in the y-axis
 	                                  MOV  BH,00h                           	;set the page number
 	                                  INT  10h                              	;execute the configuration
-	                                  SUB  CX ,GoalKeeperLeftX                     	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB  CX ,GoalKeeperLeftX              	; return to our CX to validate our loop which get out in (0 ,0)
 	                                  SUB  DX ,GoalKeeperLeftY
 	StartLeft:                        
 	                                  inc  DI
@@ -978,33 +1058,33 @@ drawGoalKeepers proc
 	                                  MOV  AH,0Bh                           	;set the configuration
 	                                  MOV  CX, GoalKeeperW                  	;set the width (X) up to 64 (based on image resolution)
 	                                  MOV  DX, GoalKeeperH
-	                                  mov  DI, offset rightGoalKeeper        	; to iterate over the pixels
-	                                  jmp  StartRight                        	;Avoid drawing before the calculations
+	                                  mov  DI, offset rightGoalKeeper       	; to iterate over the pixels
+	                                  jmp  StartRight                       	;Avoid drawing before the calculations
 
-	DrawRight:
+	DrawRight:                        
 	                                  MOV  AH,0Ch                           	;set the configuration to writing a pixel
 	                                  mov  al, [DI]                         	; color of the current coordinates
 	                                  MOV  BH,00h                           	;set the page number
-	                                 jmp validRight                        	;set the page number
+	                                  jmp  validRight                       	;set the page number
 	                                  INT  10h                              	;execute the configuration
 
-	validRight:                           
-	                                  ADD  CX, GoalKeeperRightX                   	; for shifting in the x -axis
-	                                  ADD  DX, GoalKeeperRightY                     	; for shifting in the y-axis
+	validRight:                       
+	                                  ADD  CX, GoalKeeperRightX             	; for shifting in the x -axis
+	                                  ADD  DX, GoalKeeperRightY             	; for shifting in the y-axis
 	                                  MOV  BH,00h                           	;set the page number
 	                                  INT  10h                              	;execute the configuration
-	                                  SUB  CX ,GoalKeeperRightX                     	; return to our CX to validate our loop which get out in (0 ,0)
+	                                  SUB  CX ,GoalKeeperRightX             	; return to our CX to validate our loop which get out in (0 ,0)
 	                                  SUB  DX ,GoalKeeperRightY
-	StartRight:
+	StartRight:                       
 	                                  inc  DI
 	                                  DEC  Cx                               	;  loop iteration in x direction
-	                                  JNZ  DrawRight                         	;  check if we can draw c urrent x and y and excape the y iteration
+	                                  JNZ  DrawRight                        	;  check if we can draw c urrent x and y and excape the y iteration
 	                                  mov  Cx, GoalKeeperW                  	;  if loop iteration in y direction, then x should start over so that we sweep the grid
 	                                  DEC  DX                               	;  loop iteration in y direction
-	                                  JZ   ENDINGRight                       	;  both x and y reached 00 so end program
+	                                  JZ   ENDINGRight                      	;  both x and y reached 00 so end program
 	                                  Jmp  DrawRight
 
-	ENDINGRight:
+	ENDINGRight:                      
 	                                  ret
 drawGoalKeepers endp
 
