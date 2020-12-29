@@ -30,22 +30,22 @@ ENDM print_game_separators
 
 score_line_separators MACRO x, y
 LOCAL x1,x2
-mov cx,x
-mov ah,0ch
-mov bh,0
-mov di,cx
-mov si,y
-add si,25
-add di,2
-mov al,0bh
-x1:mov dx,y
-x2:int 10h
-inc dx
-cmp dx,si
-jnz x2
-inc cx
-cmp cx,di
-jnz x1
+									  mov cx,x
+									  mov ah,0ch
+									  mov bh,0
+									  mov di,cx
+									  mov si,y
+									  add si,25
+									  add di,2
+									  mov al,0bh
+									  x1:mov dx,y
+									  x2:int 10h
+									  inc dx
+									  cmp dx,si
+									  jnz x2
+									  inc cx
+									  cmp cx,di
+									  jnz x1
 
 ENDM score_line_separators 
 
