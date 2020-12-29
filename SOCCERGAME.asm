@@ -817,11 +817,17 @@ MAIN PROC FAR
 	                                  mov                   bx, 0100h                                                                            	; 640x400 screen graphics mode
 	                                  INT                   10h                                                                                  	;execute the configuration
 				                    
-	GameProcess:                      
-	                                  call                  BackGround
-	                                  call                  write_player_name
+
+	                                  call                  score_bar
+	                                  call                  print_game_strings
 	                                  call                  print_player1_score
 	                                  call                  print_player2_score
+
+
+
+
+	GameProcess:                      
+	                                  call                  BackGround
 	                                  call                  drawGoalKeepers
 	                                  call                  CheckKeyPressed
 	;-------------------------------- to indicate that the user pressed on F4
@@ -1294,17 +1300,6 @@ BackGround proc
 	                                  cmp                   dx,di
 	                                  jnz                   again2
 
-	;-------------------------------- score area
-	                                  print_game_separators 144,305,498
-	                                  print_game_separators 144,280,496
-	                                  print_game_separators 0,380,640
-
-	                                  score_line_separators 144,280
-	                                  score_line_separators 295,280
-	                                  score_line_separators 319,280
-	                                  score_line_separators 342,280
-	                                  score_line_separators 496,280
-
 	                                  ret
 
 BackGround endp
@@ -1420,7 +1415,7 @@ program_functionalities proc
 program_functionalities endp
 
 
-write_player_name proc
+print_game_strings proc
 	;-------------------------------- write at the center
 	                                  mov                   ah,0
 	                                  mov                   al,max_size1
@@ -1477,7 +1472,7 @@ write_player_name proc
 
 	                                  ret
 
-write_player_name endp
+print_game_strings endp
 
 
 print_player1_score proc
@@ -1517,5 +1512,21 @@ print_player2_score proc
 
 	                                  ret
 print_player2_score endp
+
+score_bar proc
+
+	;-------------------------------- score bar and separators
+	                                  print_game_separators 144,305,498
+	                                  print_game_separators 144,280,496
+	                                  print_game_separators 0,380,640
+
+	                                  score_line_separators 144,280
+	                                  score_line_separators 295,280
+	                                  score_line_separators 319,280
+	                                  score_line_separators 342,280
+	                                  score_line_separators 496,280
+									  
+									  ret
+score_bar endp
 
 END MAIN
