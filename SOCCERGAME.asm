@@ -846,6 +846,7 @@ MAIN PROC FAR
 	                                  call                  CheckBallCollisionWithPlayers
 	                                  call                  UpdateBallPosition
 	                                  call                  DrawingBall
+	                                  call                  CheckIfBallInsideNet
 	;call                  delay
 	;                                  call                  CheckBallCollisionWithScreen
 	;                                  call                  CheckBallCollisionWithPlayers
@@ -1622,5 +1623,69 @@ score_bar proc
 									  
 	                                  ret
 score_bar endp
+
+	;description
+CheckIfBallInsideNet PROC
+
+	; check if ball inside the left net
+	                                  mov                   Ax,BallX
+	                                  add                   Ax,BallW
+	                                  mov                   Bx ,GoalKeeperLeftX
+	                                  add                   Bx,GoalKeeperW
+	                                  cmp                   Ax,Bx
+	                                  JG                    BallIsnotInsideLeftNet
+
+	                                  mov                   Ax,BallY
+	                                  cmp                   Ax,GoalKeeperLeftY
+	                                  JL                    BallIsnotInsideLeftNet
+
+	                                  inc                   player2_score
+	                                  call                  print_player2_score
+
+	                                  call                  PutElementsInIntialPosition
+
+	BallIsnotInsideLeftNet:           
+
+	; check if ball inside the right net
+	                                  mov                   Ax,BallX
+	                                  mov                   Bx ,GoalKeeperRightX
+	                                  cmp                   Ax,Bx
+	                                  JL                    BallIsnotInsideRightNet
+
+	                                  mov                   Ax,BallY
+	                                  cmp                   Ax,GoalKeeperRightY
+	                                  JL                    BallIsnotInsideRightNet
+
+	                                  inc                   player1_score
+	                                  call                  print_player1_score
+
+	                                  call                  PutElementsInIntialPosition
+
+
+	BallIsnotInsideRightNet:          
+
+
+	                                  ret
+CheckIfBallInsideNet ENDP
+
+	;description
+PutElementsInIntialPosition PROC
+	                                  mov                   BallX,285
+	                                  mov                   BallY,160
+	                                  mov                   BallSpeedX,-1
+	                                  mov                   BallSpeedY,1
+	                                  mov                   Player1X,40
+	                                  mov                   Player1Y,91
+	                                  mov                   Player2X,557
+	                                  mov                   Player2Y,91
+	                                  mov                   Player1SpeedX,08h
+	                                  mov                   Player1SpeedY,32h
+	                                  mov                   Player2SpeedX,08h
+	                                  mov                   Player2SpeedY,32h
+	                                  mov                   Player1FallStatus,0
+	                                  mov                   Player2FallStatus,0
+
+	                                  ret
+PutElementsInIntialPosition ENDP
 
 END MAIN
