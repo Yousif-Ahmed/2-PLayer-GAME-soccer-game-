@@ -709,7 +709,9 @@ ENDM print_dashes
 	BallSpeedY            DW               1
 	BallW                 equ              35
 	BallH                 equ              35
-	BallBound             equ              15
+	BallBound             equ              0
+	BallMaxSpeedX         equ              10
+	BallMaxSpeedY         equ              -15
 
 	Player1W              equ              43
 	Player1H              equ              105
@@ -740,7 +742,7 @@ ENDM print_dashes
 	Player2FallStatus     dw               0
 
 	Gravity               equ              1                                                                                                                                                              	;gravity acceleration
-	FractionDecreaseSpeed equ              1                                                                                                                                                              	;speed loss due to faction between ball and walls
+	FractionDecreaseSpeed equ              2                                                                                                                                                              	;speed loss due to faction between ball and walls
 	FractionIncreaseSpeed equ              1
 	;__________________________________________________________________________________________________________________________________________
 
@@ -842,12 +844,12 @@ MAIN PROC FAR
 	                                  call                  DRAWE_PLAYERS
 	                                  call                  CheckBallCollisionWithScreen
 	                                  call                  CheckBallCollisionWithPlayers
-	                                  call                  DrawingBall
-	                                  call                  delay
 	                                  call                  UpdateBallPosition
-	                                  call                  CheckBallCollisionWithScreen
-	                                  call                  CheckBallCollisionWithPlayers
-	                                  call                  delay
+	                                  call                  DrawingBall
+	;call                  delay
+	;                                  call                  CheckBallCollisionWithScreen
+	;                                  call                  CheckBallCollisionWithPlayers
+	;call                  delay
 
 	                                  jmp                   GameProcess
 
@@ -1140,7 +1142,7 @@ CheckBallCollisionWithScreen PROC
 	;check collision with right edge of the screen
 	                                  mov                   Ax,BallX
 	                                  add                   Ax,BallW
-	                                  add                   Ax ,BallBound
+	                                  add                   Ax,BallBound
 	                                  cmp                   Ax,ScreenW
     
 	                                  JNG                   NoCollisionWithRightEdge
@@ -1157,7 +1159,7 @@ CheckBallCollisionWithScreen PROC
 	                                  cmp                   BallSpeedx,0
 	                                  JE                    NoCollisionWithLeftEdge
 	                                  NEG                   BallSpeedx
-	                                  sub                   BallSpeedx,FractionDecreaseSpeed
+	;        sub                   BallSpeedx,FractionDecreaseSpeed
 	NoCollisionWithLeftEdge:          
 
 	;check collision with upper edge of the screen
@@ -1190,20 +1192,54 @@ UpdateBallPosition PROC
 	;add gravity affect
 	                                  mov                   Ax,Gravity
 	                                  add                   BallSpeedY,Ax
+	;check if the speedx crossed the limit
+	                                  cmp                   BallSpeedX,BallMaxSpeedX
+	                                  jLE                   BallSpeedXIsFine
+	                                  mov                   BallSpeedx,BallMaxSpeedX
+	BallSpeedXIsFine:                 
 
+	;check if the speedy crossed the limit
+	                                  cmp                   BallSpeedY,BallMaxSpeedY
+	                                  jGE                   BallSpeedYIsFine
+	                                  mov                   BallSpeedY,BallMaxSpeedY
+	BallSpeedYIsFine:                 
 	                                  mov                   Ax,BallSpeedX
 	                                  add                   BallX,Ax
 	                                  mov                   Ax,BallSpeedY
 	                                  add                   BallY,Ax
-									  
-	;check if ballY crossed the lower limit
+
+
+	;check if ballY crossed the upper screen
+	                                  mov                   Ax,0
+	                                  dec                   Ax
+	                                  cmp                   BallY,Ax
+	                                  JNL                   ExitCheckBallCrossedUpper
+	                                  mov                   BallY,Ax
+	ExitCheckBallCrossedUpper:        
+	;check if ballY crossed the lower screen
 	                                  mov                   Ax,ScreenH
 	                                  sub                   Ax,BallH
 	                                  inc                   Ax
 	                                  cmp                   BallY,Ax
-	                                  JNG                   ExitUpdateBallPosition
+	                                  JNG                   ExitCheckBallCrossedLower
 	                                  mov                   BallY,Ax
-	
+	ExitCheckBallCrossedLower:        
+
+	;check if ballY crossed the Right screen
+	                                  mov                   Ax,ScreenW
+	                                  sub                   Ax,BallW
+	                                  inc                   Ax
+	                                  cmp                   BallX,Ax
+	                                  JNG                   ExitCheckBallCrossedRight
+	                                  mov                   BallX,Ax
+	ExitCheckBallCrossedRight:        
+	;check if ballY crossed the Left screen
+	                                  mov                   Ax,0
+	                                  dec                   Ax
+	                                  cmp                   BallX,Ax
+	                                  JNL                   ExitCheckBallCrossedLeft
+	                                  mov                   BallX,Ax
+	ExitCheckBallCrossedLeft:         
 	
 	ExitUpdateBallPosition:           
 	                                  ret
@@ -1255,9 +1291,8 @@ CheckBallCollisionWithPlayers PROC
 	                                  JNG                   ExitCheckBallCollisionWithPlayer1
 
 	                                  NEG                   BallSpeedX
-	                                  NEG                   BallSpeedY
 	;increase ballspeed in both direction due to colision
-	                                  add                   BallSpeedY,5
+	                                  add                   BallSpeedY,10
 	                                  mov                   Ax,Player1X
 	                                  add                   Ax,Player1W
 	                                  mov                   Bx,BallX
@@ -1297,9 +1332,8 @@ CheckBallCollisionWithPlayers PROC
 	                                  JNG                   ExitCheckBallCollisionWithPlayer2
 
 	                                  NEG                   BallSpeedX
-	                                  NEG                   BallSpeedY
 	;increase ballspeed in both direction due to colision
-	                                  add                   BallSpeedY,5
+	                                  add                   BallSpeedY,10
 	                                  mov                   Ax,Player2X
 	                                  add                   Ax,Player2W
 	                                  mov                   Bx,BallX
