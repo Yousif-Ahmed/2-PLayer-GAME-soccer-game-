@@ -430,37 +430,38 @@ ENDM print_dashes
 	                      DB               31, 31, 31, 31, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 31, 31, 31, 31, 31, 31, 31
 
 ​
-	BallColor             DB               31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 31, 16, 16, 31, 31, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31
-	                      DB               31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 231, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 16, 16, 16, 231, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 16
-	                      DB               16, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 31, 31, 31, 31
-	                      DB               31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 31, 31
-	                      DB               31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 16, 16, 31, 31, 31, 16, 16, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31
-	                      DB               31, 16, 16, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 16, 16, 31, 31
-	                      DB               16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 16, 16, 31, 31, 16, 31, 31, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 16, 16, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 16, 16, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31
-	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 16, 16, 16, 16, 16
-	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 16, 31, 31, 16, 16, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31
-	                      DB               31, 16, 16, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 16, 16, 31, 31
-	                      DB               16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 16, 16, 31, 31, 16, 16, 31, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 16, 16, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 16, 16, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 16, 16, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31
-	                      DB               31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 16, 16, 31
-	                      DB               31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 16, 16
-	                      DB               31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31
-	                      DB               31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 231, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 16, 16, 231, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 31, 16, 16, 31, 31, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
-	                      DB               31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
+	BallColor             DB               44, 44, 44, 44, 31, 44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44
+	                      DB               44, 44, 44, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 31
+	                      DB               31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 31, 31, 31, 31, 31, 16, 16, 16
+	                      DB               16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31
+	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 234, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31
+	                      DB               31, 31, 16, 16, 16, 234, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16
+	                      DB               16, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 44, 44, 44, 44
+	                      DB               44, 44, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 16, 16, 16
+	                      DB               16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16
+	                      DB               16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 16
+	                      DB               16, 16, 16, 16, 16, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16
+	                      DB               31, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16, 31, 16, 16, 16, 31
+	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31
+	                      DB               31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44
+	                      DB               16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31
+	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31
+	                      DB               31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16
+	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16
+	                      DB               31, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16, 31, 16, 16, 16, 16
+	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 16, 16, 16, 16, 16, 16, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16
+	                      DB               16, 16, 16, 16, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 44, 44
+	                      DB               44, 44, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 16, 16, 16
+	                      DB               16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 31, 31
+	                      DB               31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31
+	                      DB               31, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31
+	                      DB               31, 31, 31, 31, 31, 31, 31, 16, 16, 16, 234, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 16, 16, 31, 31, 31, 31, 31, 31, 31
+	                      DB               31, 31, 16, 16, 234, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 31, 31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 16, 44, 44
+	                      DB               44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44
+	                      DB               44, 44, 44, 44, 44, 44, 44, 44, 16, 16, 16, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44
+	                      DB               44, 44, 44, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44
+	                      DB               44, 44, 44, 16, 16, 16, 16, 16, 16, 16, 16, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44
+
 	
 	rightGoalKeeper       DB               31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
@@ -708,6 +709,7 @@ ENDM print_dashes
 	BallSpeedY            DW               1
 	BallW                 equ              35
 	BallH                 equ              35
+	BallBound             equ              15
 
 	Player1W              equ              43
 	Player1H              equ              105
@@ -730,16 +732,16 @@ ENDM print_dashes
 	SCreenW               equ              640
 	Window_Bounds         dw               40
 	;Gravity Variables
-	GravityLine           dw               90                                                                                                                                                             	;the highest height the player can reach
-	LandLine              dw               5                                                                                                                                                              	;the lowest height the player can reach
-	GravityAccleration    dw               15d
+	GravityLine           dw               91                                                                                                                                                             	;the highest height the player can reach
+	LandLine              dw               196                                                                                                                                                            	;the lowest height the player can reach
+	GravityAccleration    dw               10d
 
 	Player1FallStatus     dw               0
 	Player2FallStatus     dw               0
 
 	Gravity               equ              1                                                                                                                                                              	;gravity acceleration
 	FractionDecreaseSpeed equ              1                                                                                                                                                              	;speed loss due to faction between ball and walls
-	FractionIncreaseSpeed equ              2
+	FractionIncreaseSpeed equ              1
 	;__________________________________________________________________________________________________________________________________________
 
 	player1_score         db               0
@@ -822,13 +824,12 @@ MAIN PROC FAR
 	                                  call                  print_game_strings
 	                                  call                  print_player1_score
 	                                  call                  print_player2_score
-
+	                                  
 
 
 
 	GameProcess:                      
-	                                  call                  BackGround
-	                                  call                  drawGoalKeepers
+	                                 
 	                                  call                  CheckKeyPressed
 	;-------------------------------- to indicate that the user pressed on F4
 	                                  cmp                   di,-1
@@ -836,13 +837,17 @@ MAIN PROC FAR
 	;-------------------------------------------------------------------------
 	                                  call                  PlayerGravity
 	                                  call                  PlayerFall
+	                                  call                  BackGround
+	                                  call                  drawGoalKeepers
 	                                  call                  DRAWE_PLAYERS
-	                                  call                  DrawingBall
 	                                  call                  CheckBallCollisionWithScreen
+	                                  call                  CheckBallCollisionWithPlayers
+	                                  call                  DrawingBall
+	                                  call                  delay
 	                                  call                  UpdateBallPosition
 	                                  call                  CheckBallCollisionWithScreen
-	                                  call                  CheckBallCollisionWithPlayer1
-	; call delay
+	                                  call                  CheckBallCollisionWithPlayers
+	                                  call                  delay
 
 	                                  jmp                   GameProcess
 
@@ -854,7 +859,7 @@ MAIN ENDP
 
 delay proc
 	                                  mov                   di , 00FFFh
-	PASS1:                            MOV                   CX   ,1000
+	PASS1:                            MOV                   CX   ,2000
 	PASS2:                            LOOP                  PASS2
 	                                  DEC                   DI
 	                                  JNZ                   PASS1
@@ -1107,9 +1112,11 @@ DrawingBall PROC
 
 	                                  mov                   al,[si]                                                                              	;mov current color
 	                                  mov                   ah,0ch
+	                                  cmp                   al ,44
+	                                  jZ                    NODROW
 	                                  int                   10h                                                                                  	;draw pixed mode
 
-	                                  inc                   cx
+	NODROW:                           inc                   cx
 	                                  inc                   si
 	                                  mov                   di,BallX
 	                                  add                   di,BallW
@@ -1133,6 +1140,7 @@ CheckBallCollisionWithScreen PROC
 	;check collision with right edge of the screen
 	                                  mov                   Ax,BallX
 	                                  add                   Ax,BallW
+	                                  add                   Ax ,BallBound
 	                                  cmp                   Ax,ScreenW
     
 	                                  JNG                   NoCollisionWithRightEdge
@@ -1144,7 +1152,7 @@ CheckBallCollisionWithScreen PROC
 
 	;check collision with left edge of the screen
 	                                  mov                   Ax,BallX
-	                                  cmp                   Ax,0
+	                                  cmp                   Ax,BallBound
 	                                  JNL                   NoCollisionWithLeftEdge
 	                                  cmp                   BallSpeedx,0
 	                                  JE                    NoCollisionWithLeftEdge
@@ -1154,7 +1162,7 @@ CheckBallCollisionWithScreen PROC
 
 	;check collision with upper edge of the screen
 	                                  mov                   Ax,BallY
-	                                  cmp                   Ax,0
+	                                  cmp                   Ax,BallBound
 	                                  JNL                   NoCollisionWithUpperEdge
 	                                  cmp                   BallSpeedY,0
 	                                  JE                    NoCollisionWithUpperEdge
@@ -1182,10 +1190,12 @@ UpdateBallPosition PROC
 	;add gravity affect
 	                                  mov                   Ax,Gravity
 	                                  add                   BallSpeedY,Ax
+
 	                                  mov                   Ax,BallSpeedX
 	                                  add                   BallX,Ax
 	                                  mov                   Ax,BallSpeedY
 	                                  add                   BallY,Ax
+									  
 	;check if ballY crossed the lower limit
 	                                  mov                   Ax,ScreenH
 	                                  sub                   Ax,BallH
@@ -1193,9 +1203,12 @@ UpdateBallPosition PROC
 	                                  cmp                   BallY,Ax
 	                                  JNG                   ExitUpdateBallPosition
 	                                  mov                   BallY,Ax
+	
+	
 	ExitUpdateBallPosition:           
 	                                  ret
 UpdateBallPosition ENDP
+
 
 	;description
 UpdatePlayer1Position PROC
@@ -1212,7 +1225,7 @@ UpdatePlayer1Position PROC
 UpdatePlayer1Position ENDP
 
 	;description
-CheckBallCollisionWithPlayer1 PROC
+CheckBallCollisionWithPlayers PROC
 	;first check the x axis maxx1>minx2 && maxx2>minx1
 	                                  mov                   Ax,BallX
 	                                  add                   Ax,BallW
@@ -1225,6 +1238,7 @@ CheckBallCollisionWithPlayer1 PROC
 	                                  mov                   Bx,BallX
 	                                  cmp                   Ax,Bx
 	                                  JNG                   ExitCheckBallCollisionWithPlayer1
+									            
 
 	;first check the y axis maxy1>miny2 && maxy2>miny1
 
@@ -1243,7 +1257,7 @@ CheckBallCollisionWithPlayer1 PROC
 	                                  NEG                   BallSpeedX
 	                                  NEG                   BallSpeedY
 	;increase ballspeed in both direction due to colision
-	                                  add                   BallSpeedY,10
+	                                  add                   BallSpeedY,5
 	                                  mov                   Ax,Player1X
 	                                  add                   Ax,Player1W
 	                                  mov                   Bx,BallX
@@ -1255,8 +1269,50 @@ CheckBallCollisionWithPlayer1 PROC
 	Player1IsOnLeft:                  add                   BallSpeedX,5
 
 	ExitCheckBallCollisionWithPlayer1:
+	;first check the x axis maxx1>minx2 && maxx2>minx1
+	                                  mov                   Ax,BallX
+	                                  add                   Ax,BallW
+	                                  mov                   Bx ,Player2X
+	                                  cmp                   Ax,Bx
+	                                  JNG                   ExitCheckBallCollisionWithPlayer2
+
+	                                  mov                   Ax,Player2X
+	                                  add                   Ax,Player2W
+	                                  mov                   Bx,BallX
+	                                  cmp                   Ax,Bx
+	                                  JNG                   ExitCheckBallCollisionWithPlayer2
+
+	;first check the y axis maxy1>miny2 && maxy2>miny1
+
+	                                  mov                   Ax,BallY
+	                                  add                   Ax,BallH
+	                                  mov                   Bx ,Player2Y
+	                                  cmp                   Ax,Bx
+	                                  JNG                   ExitCheckBallCollisionWithPlayer2
+
+	                                  mov                   Ax,Player2Y
+	                                  add                   Ax,Player2H
+	                                  mov                   Bx,BallY
+	                                  cmp                   Ax,Bx
+	                                  JNG                   ExitCheckBallCollisionWithPlayer2
+
+	                                  NEG                   BallSpeedX
+	                                  NEG                   BallSpeedY
+	;increase ballspeed in both direction due to colision
+	                                  add                   BallSpeedY,5
+	                                  mov                   Ax,Player2X
+	                                  add                   Ax,Player2W
+	                                  mov                   Bx,BallX
+	                                  add                   Bx,BallW
+	                                  cmp                   Ax,Bx
+	                                  JL                    Player2IsOnLeft
+	                                  sub                   BallSpeedX,5
+	                                  jmp                   ExitCheckBallCollisionWithPlayer2
+	Player2IsOnLeft:                  add                   BallSpeedX,5
+
+	ExitCheckBallCollisionWithPlayer2:
 	                                  ret
-CheckBallCollisionWithPlayer1 ENDP
+CheckBallCollisionWithPlayers ENDP
 
 
 
@@ -1316,6 +1372,8 @@ drawGoalKeepers proc
 	                                  MOV                   AH,0Ch                                                                               	;set the configuration to writing a pixel
 	                                  mov                   al, [DI]                                                                             	; color of the current coordinates
 	                                  MOV                   BH,00h
+	                                  cmp                   al ,27
+	                                  je                    StartLeft
 	                                  jmp                   validLeft                                                                            	;set the page number
 	                                  INT                   10h                                                                                  	;execute the configuration
 
@@ -1347,7 +1405,9 @@ drawGoalKeepers proc
 	DrawRight:                        
 	                                  MOV                   AH,0Ch                                                                               	;set the configuration to writing a pixel
 	                                  mov                   al, [DI]                                                                             	; color of the current coordinates
-	                                  MOV                   BH,00h                                                                               	;set the page number
+	                                  MOV                   BH,00h
+	                                  cmp                   al ,27
+	                                  je                    StartRight                                                                           	;set the page number
 	                                  jmp                   validRight                                                                           	;set the page number
 	                                  INT                   10h                                                                                  	;execute the configuration
 
@@ -1526,7 +1586,7 @@ score_bar proc
 	                                  score_line_separators 342,280
 	                                  score_line_separators 496,280
 									  
-									  ret
+	                                  ret
 score_bar endp
 
 END MAIN
