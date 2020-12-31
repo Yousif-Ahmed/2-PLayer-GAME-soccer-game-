@@ -193,8 +193,6 @@ LOCAL status_dashes
 ENDM print_dashes
 
 
-
-
 ;________________________________________________________________________________________________________________________________________
 .MODEL SMALL
 .STACK 64
@@ -690,7 +688,7 @@ ENDM print_dashes
 	                      DB               27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 29, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27
 	                      DB               31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 29, 27, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	                      DB               31, 31, 31, 31, 31, 29, 27, 27, 27, 27, 27, 26, 27, 27, 27, 27, 27, 27, 27, 27
-
+    
 
 	GoalKeeperW           equ              30
 	GoalKeeperH           equ              150
@@ -717,14 +715,14 @@ ENDM print_dashes
 	Player1H              equ              105
 	Player1X              DW               40
 	Player1Y              DW               91
-	Player1SpeedX         DW               08h
+	Player1SpeedX         DW               05h
 	Player1SpeedY         DW               32h
     
 	Player2W              equ              43
 	Player2H              equ              105
-	Player2X              DW               557
+	Player2X              DW               552
 	Player2Y              DW               91
-	Player2SpeedX         DW               08h
+	Player2SpeedX         DW               05h
 	Player2SpeedY         DW               32h
     
 
@@ -732,7 +730,7 @@ ENDM print_dashes
 
 	ScreenH               equ              196
 	SCreenW               equ              640
-	Window_Bounds         dw               40
+	Window_Bounds         dw               41
 	;Gravity Variables
 	GravityLine           dw               91                                                                                                                                                             	;the highest height the player can reach
 	LandLine              dw               196                                                                                                                                                            	;the lowest height the player can reach
@@ -745,6 +743,7 @@ ENDM print_dashes
 	FractionDecreaseSpeed equ              2                                                                                                                                                              	;speed loss due to faction between ball and walls
 	FractionIncreaseSpeed equ              1
 	;__________________________________________________________________________________________________________________________________________
+	
 
 	player1_score         db               0
 
@@ -817,10 +816,11 @@ MAIN PROC FAR
 	                                  jmp                   key_specify_action
 
 
-	play_game:                        mov                   ax, 4F02h
+	play_game:                        
+	                                  mov                   ax, 4F02h
 	                                  mov                   bx, 0100h                                                                            	; 640x400 screen graphics mode
 	                                  INT                   10h                                                                                  	;execute the configuration
-				                    
+				                     
 
 	                                  call                  score_bar
 	                                  call                  print_game_strings
@@ -828,7 +828,10 @@ MAIN PROC FAR
 	                                  call                  print_player2_score
 	                                  
 
-
+	                                  call                  BackGround
+	                                  call                  drawGoalKeepers
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
 
 	GameProcess:                      
 	                                 
@@ -839,18 +842,16 @@ MAIN PROC FAR
 	;-------------------------------------------------------------------------
 	                                  call                  PlayerGravity
 	                                  call                  PlayerFall
-	                                  call                  BackGround
-	                                  call                  drawGoalKeepers
-	                                  call                  DRAWE_PLAYERS
+	                                  call                  REFREASH_SCREEN_PART
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
+	                                  call                  DrawingBall
+	                                  call                  delay
 	                                  call                  CheckBallCollisionWithScreen
 	                                  call                  CheckBallCollisionWithPlayers
 	                                  call                  UpdateBallPosition
-	                                  call                  DrawingBall
 	                                  call                  CheckIfBallInsideNet
-	;call                  delay
-	;                                  call                  CheckBallCollisionWithScreen
-	;                                  call                  CheckBallCollisionWithPlayers
-	;call                  delay
+	                                  
 
 	                                  jmp                   GameProcess
 
@@ -859,6 +860,40 @@ MAIN PROC FAR
             
 MAIN ENDP
 
+REFREASH_SCREEN_PART PROC
+
+	                                  mov                   di,196
+
+	                                  mov                   dx,0
+	                                  mov                   al,7
+	                                  mov                   ah,0ch
+	                                  mov                   bh,0
+	repeate:                          mov                   cx,40
+	back_:                            int                   10h
+	                                  inc                   cx
+	                                  cmp                   cx,600
+	                                  jnz                   back_
+	                                  inc                   dx
+	                                  cmp                   dx,di
+	                                  jnz                   repeate
+
+	                                  mov                   di,45
+
+	                                  mov                   dx,0
+	                                  mov                   al,7
+	                                  mov                   ah,0ch
+	                                  mov                   bh,0
+	repeate2:                         mov                   cx,0
+	back2_:                           int                   10h
+	                                  inc                   cx
+	                                  cmp                   cx,640
+	                                  jnz                   back2_
+	                                  inc                   dx
+	                                  cmp                   dx,di
+	                                  jnz                   repeate2
+
+
+REFREASH_SCREEN_PART ENDP
 
 delay proc
 	                                  mov                   di , 00FFFh
@@ -1046,7 +1081,7 @@ CheckKeyPressed PROC
 
 CheckKeyPressed ENDP
 
-DRAWE_PLAYERS PROC
+DRAWE_PLAYER1 PROC
 	                                  MOV                   AH,0Bh                                                                               	;set the configuration
 	                                  MOV                   CX, Player1W                                                                         	;set the width (X) up to 64 (based on image resolution)
 	                                  MOV                   DX, Player1H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
@@ -1075,6 +1110,10 @@ DRAWE_PLAYERS PROC
 	                                  Jmp                   Draw1
 
 	ENDING1:                          
+	
+	                                  ret
+DRAWE_PLAYER1 ENDP
+DRAWE_PLAYER2 PROC
 	                                  MOV                   AH,0Bh                                                                               	;set the configuration
 	                                  MOV                   CX, Player2W                                                                         	;set the width (X) up to 64 (based on image resolution)
 	                                  MOV                   DX, Player2H                                                                         	;set the hieght (Y) up to 64 (based on image resolution)
@@ -1102,10 +1141,8 @@ DRAWE_PLAYERS PROC
 	                                  JZ                    ENDING2                                                                              	;  both x and y reached 00 so end program
 	                                  Jmp                   Draw2
 	ENDING2:                          
-	                                  ret
-DRAWE_PLAYERS ENDP
+DRAWE_PLAYER2 ENDP
 
-	
 
 DrawingBall PROC
 	                                  mov                   dx,BallY
@@ -1672,8 +1709,8 @@ CheckIfBallInsideNet ENDP
 PutElementsInIntialPosition PROC
 	                                  mov                   BallX,285
 	                                  mov                   BallY,160
-	                                  mov                   BallSpeedX,-1
-	                                  mov                   BallSpeedY,1
+	                                  mov                   BallSpeedX,0
+	                                  mov                   BallSpeedY,0
 	                                  mov                   Player1X,40
 	                                  mov                   Player1Y,91
 	                                  mov                   Player2X,557
@@ -1684,6 +1721,9 @@ PutElementsInIntialPosition PROC
 	                                  mov                   Player2SpeedY,32h
 	                                  mov                   Player1FallStatus,0
 	                                  mov                   Player2FallStatus,0
+	                                  call                  BackGround
+	                                  call                  DrawingBall
+	                                  Call                  drawGoalKeepers
 
 	                                  ret
 PutElementsInIntialPosition ENDP
