@@ -838,9 +838,11 @@ MAIN PROC FAR
 	                                  call                  CheckKeyPressed
 	;-------------------------------- to indicate that the user pressed on F4
 	                                  cmp                   di,-1
-	                                  jz                    functionalites
+	                                  jnz                   continue_game
+	                                  call                  new_game
+	                                  jmp                   functionalites
 	;-------------------------------------------------------------------------
-	                                  call                  PlayerGravity
+	continue_game:                    call                  PlayerGravity
 	                                  call                  PlayerFall
 	                                  call                  REFREASH_SCREEN_PART
 	                                  call                  DRAWE_PLAYER1
@@ -963,6 +965,7 @@ PlayerFall proc    near
 PlayerFall endp
 
 CheckKeyPressed PROC
+	                                  mov                   di,0
 
 	ReadKey:                          mov                   ah,1                                                                                 	;Get key pressed Don't Wait for the key
 	                                  int                   16h
@@ -1727,5 +1730,15 @@ PutElementsInIntialPosition PROC
 
 	                                  ret
 PutElementsInIntialPosition ENDP
+
+new_game proc
+	                                  mov                   player1_score,0
+	                                  mov                   player2_score,0
+	                                  mov                   Player1X,40
+	                                  mov                   Player1Y,91
+	                                  mov                   Player2X,552
+	                                  mov                   Player2Y,91
+	                                  ret
+new_game endp
 
 END MAIN
