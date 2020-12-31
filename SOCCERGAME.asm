@@ -703,7 +703,7 @@ ENDM print_dashes
 
 	BallX                 Dw               285
 	BallY                 Dw               160
-	BallSpeedX            DW               -1
+	BallSpeedX            DW               0
 	BallSpeedY            DW               1
 	BallW                 equ              35
 	BallH                 equ              35
@@ -730,7 +730,7 @@ ENDM print_dashes
 
 	ScreenH               equ              196
 	SCreenW               equ              640
-	Window_Bounds         dw               41
+	Window_Bounds         dw               40
 	;Gravity Variables
 	GravityLine           dw               91                                                                                                                                                             	;the highest height the player can reach
 	LandLine              dw               196                                                                                                                                                            	;the lowest height the player can reach
@@ -838,9 +838,11 @@ MAIN PROC FAR
 	                                  call                  CheckKeyPressed
 	;-------------------------------- to indicate that the user pressed on F4
 	                                  cmp                   di,-1
-	                                  jz                    functionalites
+	                                  jnz                   continue_game
+	                                  call                  new_game
+	                                  jmp                   functionalites
 	;-------------------------------------------------------------------------
-	                                  call                  PlayerGravity
+	continue_game:                    call                  PlayerGravity
 	                                  call                  PlayerFall
 	                                  call                  REFREASH_SCREEN_PART
 	                                  call                  DRAWE_PLAYER1
@@ -859,7 +861,13 @@ MAIN PROC FAR
 	                                  int                   21h
             
 MAIN ENDP
-
+delay proc
+	                                  mov                   cx ,0
+	                                  mov                   dx ,0a120h
+	                                  mov                   ah ,86h
+	                                  int                   15h
+	                                  ret
+delay ENdP
 REFREASH_SCREEN_PART PROC
 
 	                                  mov                   di,196
@@ -895,14 +903,7 @@ REFREASH_SCREEN_PART PROC
 
 REFREASH_SCREEN_PART ENDP
 
-delay proc
-	                                  mov                   di , 00FFFh
-	PASS1:                            MOV                   CX   ,2000
-	PASS2:                            LOOP                  PASS2
-	                                  DEC                   DI
-	                                  JNZ                   PASS1
-	                                  ret
-delay ENdP
+
 PlayerGravity proc near
 
 	;if player y < Gravity line player shuold fall
@@ -963,6 +964,7 @@ PlayerFall proc    near
 PlayerFall endp
 
 CheckKeyPressed PROC
+	                                  mov                   di,0
 
 	ReadKey:                          mov                   ah,1                                                                                 	;Get key pressed Don't Wait for the key
 	                                  int                   16h
@@ -1727,5 +1729,15 @@ PutElementsInIntialPosition PROC
 
 	                                  ret
 PutElementsInIntialPosition ENDP
+
+new_game proc
+	                                  mov                   player1_score,0
+	                                  mov                   player2_score,0
+	                                  mov                   Player1X,40
+	                                  mov                   Player1Y,91
+	                                  mov                   Player2X,552
+	                                  mov                   Player2Y,91
+	                                  ret
+new_game endp
 
 END MAIN
