@@ -801,7 +801,7 @@ ENDM  main_screen
 
 	Player1W              equ              43
 	Player1H              equ              105
-	Player1X              DW               40
+	Player1X              DW               47
 	Player1Y              DW               91
 	Player1SpeedX         DW               05h
 	Player1SpeedY         DW               32h
@@ -1873,9 +1873,9 @@ new_game proc
 	;------------------------------------ This proc initializes the parameters of the game after ending the game
 	                                  mov                   player1_score,0
 	                                  mov                   player2_score,0
-	                                  mov                   Player1X,40
+	                                  mov                   Player1X,47
 	                                  mov                   Player1Y,91
-	                                  mov                   Player2X,552
+	                                  mov                   Player2X,550
 	                                  mov                   Player2Y,91
 	                                  ret
 new_game endp
