@@ -8,125 +8,127 @@ clear_screen MACRO
 									  int 10h
 ENDM clear_screen
 
+;__________________________________________________________________________________________________________________________________________
 
+;This macro prints the in-game line separators using the graphics mode from x to xf and from y to y+2
 print_game_separators MACRO x,y,xf
 LOCAL sep1, sep2
-	                                  mov          dx,y
-	                                  mov          ah,0ch
-	                                  mov          bh,0
+	                                
+	                                  mov          ah,0ch         ;the draw pixel mode of int 10h
+	                                  mov          bh,0           ;page 0
+									  mov          al,0bh         ;color (light cyan)
+									  mov          dx,y           ;start at Y=y
 	                                  mov          di,dx
-									  add          di,2
-	                                  mov          al,0bh
-	sep1:                             mov          cx,x
+									  add          di,2           ;finish at Y=y+2
+
+	sep1:                             mov          cx,x           ;start at X=x
 	sep2:                             int          10h
 	                                  inc          cx
-	                                  cmp          cx,xf
+	                                  cmp          cx,xf          ;finish at X=x+xf
 	                                  jnz          sep2
 	                                  inc          dx
-	                                  cmp          dx,di
+	                                  cmp          dx,di          ;check if Y=y+2 or not
 	                                  jnz          sep1
 
 ENDM print_game_separators
 
-score_line_separators MACRO x, y
-LOCAL x1,x2
-									  mov cx,x
-									  mov ah,0ch
-									  mov bh,0
-									  mov di,cx
-									  mov si,y
-									  add si,25
-									  add di,2
-									  mov al,0bh
-									  x1:mov dx,y
-									  x2:int 10h
-									  inc dx
-									  cmp dx,si
-									  jnz x2
-									  inc cx
-									  cmp cx,di
-									  jnz x1
+;_________________________________________________________________________________________________________________________________________
 
-ENDM score_line_separators 
+;This macro prints the vertical lines of the score bar of the game
+score_bar_separators MACRO x, y
+LOCAL score_bar1,score_bar2
+									 
+									  mov 		   ah,0ch                  ;the draw pixel mode of int 10h
+									  mov 		   bh,0                    ;page 0
+									  mov  		   al,0bh                  ;color (light cyan)
+									  mov 		   cx,x                    ;start at X=x
+									  mov 		   di,cx				   
+									  add 		   di,2                    ;finish at X=x+2
+									  mov 		   si,y 
+									  add 		   si,25                   ;finish at Y=y+25 at X=x and X=x+1
 
+
+    score_bar1:						  mov 		   dx,y
+    score_bar2:						  int 		   10h
+									  inc 		   dx
+									  cmp 		   dx,si
+									  jnz 		   score_bar2
+									  inc 		   cx
+									  cmp 		   cx,di
+									  jnz 		   score_bar1
+
+ENDM score_bar_separators 
+
+;______________________________________________________________________________________________________________________________________________
 
 main_screen MACRO username_buffer, username, actual_size, name_message, enter_key, error_message, p
 LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated
+
 	;-------------------------------- clear screen
-									  mov si,0
+									  mov si,0                ;When the user enters an invalid name the SI register holds -1 otherwise 0
 	reEnter:                          clear_screen
 
-	;-------------------------------  decoration
-	;-------------------------------  cursor
+
+	;-------------------------------  move cursor to (36,4)
 	                                  mov   ah,2
 	                                  mov   bh,0
 	                                  mov   dl,36
 	                                  mov   dh,4
 	                                  int   10h
 
-	;-------------------------------- print PLAYER 1
+	;-------------------------------- print '[PLAYER #]'
 	                                  mov   dx,offset p
 	                                  mov   ah,9
 	                                  int   21h
 
-	;-------------------------------- print '[]'
-	                                  mov   ah,2
-	                                  mov   dh,4
-	                                  mov   dl,35
-	                                  int   10h
-	                                  mov   dl,'['
-	                                  int   21h
-
-
-	                                  mov   dh,4
-	                                  mov   dl,44
-	                                  int   10h
-	                                  mov   dl,']'
-	                                  int   21h
-
-	;-------------------------------- move cursor to screen center
+	;-------------------------------- move cursor to (29,10)
 	                                  mov   ah,2
 	                                  mov   bh,0
 	                                  mov   dl,29
 	                                  mov   dh,10
 	                                  int   10h
 
-	;-------------------------------- print name message
+	;-------------------------------- print 'Please Enter Your Name:'
 	                                  mov   dx,offset name_message
 	                                  mov   ah,9
 	                                  int   21h
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to(29,14)
 	                                  mov   ah,2
 	                                  mov   dl,29
 	                                  mov   dh,14
 	                                  int   10h
 
-	;-------------------------------- print enter message
+	;-------------------------------- print 'Press Enter key to continue'
 	                                  mov   dx,offset enter_key
 	                                  mov   ah,9
 	                                  int   21h
 
-	;-------------------------------- print error message if any
-	                                  cmp   si,-1
+	;-------------------------------- print error message because of incorrect name (if any)
+	                                  cmp   si,-1          ;check if the username was incorrect
 	                                  jnz   NoError
+
+	;-------------------------------- There is an error, move cursor to (0,24) 'The last line of the screen'
 	                                  mov   bh,0
 	                                  mov   ah,2
 	                                  mov   dl,0
 	                                  mov   dh,24
 	                                  int   10h
 
+    ;-------------------------------- print error message
 	                                  mov   dx,offset error_message
 	                                  mov   ah,9
 	                                  int   21h
 
-	;-------------------------------- read name
-	NoError:                          
-	                                  mov   ah,2
+	;-------------------------------- read username
+
+	;-------------------------------- move cursor to (33,12)
+	NoError:                          mov   ah,2
 	                                  mov   dl,33
 	                                  mov   dh,12
 	                                  int   10h
 
+    ;-------------------------------- call the interrupt of reading a string from user
 	                                  mov   ah,0ah
 	                                  mov   dx,offset username_buffer
 	                                  int   21h
@@ -160,43 +162,25 @@ LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated
 
 	n4:                               and   ch,cl
 
-	                                  or    bh,ch
+	                                  or    bh,ch            ;check if the first char is a capital or a small letter
 	                                  jnz   validated
 
 	;-------------------------------- indicate that the name is incorrect
 	                                  mov   si,-1                                                    
-	                                  jmp   reEnter
+	                                  jmp   reEnter         ;let the user enter a new username
 
 
-	;-------------------------------- put $ at the end of the name
+	;-------------------------------- put $ at the end of the name to print it later
 	validated:                        mov   bl,actual_size
 	                                  mov   bh,0
 	                                  mov   username[bx], '$'
 ENDM  main_screen
 
 
-print_dashes MACRO y
-LOCAL status_dashes
-	                                  mov         ah,2
-	                                  mov         bh,0
-	                                  mov         dh,y
-
-	                                  mov         dl,-1
-	status_dashes:                    inc         dl
-	                                  int         10h
-	                                  mov         bl,dl
-	                                  mov         dl,'-'
-	                                  int         21h
-	                                  mov         dl,bl
-	                                  cmp         dl,79
-	                                  jnz         status_dashes
-ENDM print_dashes
-
-
 ;________________________________________________________________________________________________________________________________________
 .MODEL SMALL
 .STACK 64
-;----------------------------------------------------------------------------------------------------------------------------------------
+
 .DATA
 	
 	Player1Color          DB               31, 31, 31, 31, 31, 31, 31, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 31, 31, 31, 31, 31, 31, 31
@@ -850,9 +834,9 @@ ENDM print_dashes
 
 	error_message         db               'Incorrect Username, The Username Should Start With a Letter','$'
 
-	p1                    db               'PLAYER 1','$'
+	p1                    db               '[PLAYER 1]','$'
 
-	p2                    db               'PLAYER 2','$'
+	p2                    db               '[PLAYER 2]','$'
 	
 	chatting_message      db               '*To start chatting, press F1', '$'
 
@@ -879,16 +863,14 @@ MAIN PROC FAR
 	                                  mov                   ax, @data
 	                                  mov                   DS, ax
 
-	;-------------------------------- main screen
+	;-------------------------------- main screen for the two players
+
 	                                  main_screen           username1_buffer, username1, actual_size1, name_message, enter_key, error_message, p1
 	                                  main_screen           username2_buffer, username2, actual_size2, name_message, enter_key, error_message, p2
 
 	;-------------------------------- program functionalities screen
                 
-	functionalites:                   mov                   ah,0
-	                                  mov                   al,3
-	                                  int                   10h
-	                                  clear_screen
+	functionalites:                   clear_screen
 	                                  call                  program_functionalities
 
 
@@ -932,12 +914,19 @@ MAIN PROC FAR
 	GameProcess:                      
 	                                 
 	                                  call                  CheckKeyPressed
-	;-------------------------------- to indicate that the user pressed on F4
+
+	;-------------------------------- check if the user pressed on F4
 	                                  cmp                   di,-1
 	                                  jnz                   continue_game
 	                                  call                  new_game
+
+	;-------------------------------- change the mode to text mode to go back to the functionalities screen								  
+									  mov                   ah,0
+	                                  mov                   al,3
+	                                  int                   10h
 	                                  jmp                   functionalites
 	;-------------------------------------------------------------------------
+
 	continue_game:                    call                  PlayerGravity
 	                                  call                  PlayerFall
 	                                  call                  REFREASH_SCREEN_PART
@@ -1640,20 +1629,34 @@ program_functionalities proc
 	                                  int                   21h
 
 	;-------------------------------- status bar
-	                                  print_dashes          22
+		                              mov         ah,2
+	                                  mov         bh,0
+	                                  mov         dh,22
+
+	                                  mov         dl,-1
+	status_dashes:                    inc         dl
+	                                  int         10h
+	                                  mov         bl,dl
+	                                  mov         dl,'-'
+	                                  int         21h
+	                                  mov         dl,bl
+	                                  cmp         dl,79
+	                                  jnz         status_dashes
+
 	                                  ret
 program_functionalities endp
 
 
 print_game_strings proc
-	;-------------------------------- write at the center
+
+	;-------------------------------- calculate the center of the rectangle of player one name with respect to the actual size of the username
 	                                  mov                   ah,0
 	                                  mov                   al,max_size1
 	                                  sub                   al,actual_size1
 	                                  mov                   bl,2
 	                                  div                   bl
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (calculated x, 18)
 	                                  mov                   ah,2
 	                                  mov                   dl,20
 	                                  add                   dl,al
@@ -1666,14 +1669,14 @@ print_game_strings proc
 	                                  mov                   ah,9
 	                                  int                   21h
 
-	;-------------------------------- write at the center
+	;-------------------------------- calculate the center of the rectangle of player two name with respect to the actual size of the username
 	                                  mov                   ah,0
 	                                  mov                   al,max_size2
 	                                  sub                   al,actual_size2
 	                                  mov                   bl,2
 	                                  div                   bl
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (calculated x, 18)
 	                                  mov                   ah,2
 	                                  mov                   dh,18
 	                                  mov                   dl,45
@@ -1695,7 +1698,7 @@ print_game_strings proc
 	                                  mov                   bh,0
 	                                  int                   10h
 
-	;------------------------------------ print the end game string
+	;-------------------------------- print the end game string
 	                                  mov                   dx,offset end_game_str
 	                                  mov                   ah,9
 	                                  int                   21h
@@ -1707,7 +1710,7 @@ print_game_strings endp
 
 print_player1_score proc
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (38,18)
 	                                  mov                   ah,2
 	                                  mov                   dh,18
 	                                  mov                   dl,38
@@ -1727,14 +1730,14 @@ print_player1_score endp
 
 print_player2_score proc
 
-	;------------------------------------ move cursor
+	;-------------------------------- move cursor to (41,18)
 	                                  mov                   ah,2
 	                                  mov                   dh,18
 	                                  mov                   dl,41
 	                                  mov                   bh,0
 	                                  int                   10h
 
-	;------------------------------------ print score
+	;-------------------------------- print score
 	                                  mov                   dl, player2_score
 	                                  add                   dl,30h
 	                                  mov                   ah,2
@@ -1750,11 +1753,11 @@ score_bar proc
 	                                  print_game_separators 144,280,496
 	                                  print_game_separators 0,380,640
 
-	                                  score_line_separators 144,280
-	                                  score_line_separators 295,280
-	                                  score_line_separators 319,280
-	                                  score_line_separators 342,280
-	                                  score_line_separators 496,280
+	                                  score_bar_separators 144,280
+	                                  score_bar_separators 295,280
+	                                  score_bar_separators 319,280
+	                                  score_bar_separators 342,280
+	                                  score_bar_separators 496,280
 									  
 	                                  ret
 score_bar endp
@@ -1831,6 +1834,7 @@ PutElementsInIntialPosition PROC
 PutElementsInIntialPosition ENDP
 
 new_game proc
+;------------------------------------ This proc initializes the parameters of the game after ending the game
 	                                  mov                   player1_score,0
 	                                  mov                   player2_score,0
 	                                  mov                   Player1X,40
