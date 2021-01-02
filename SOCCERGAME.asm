@@ -47,11 +47,10 @@ LOCAL score_bar1,score_bar2
 									  mov 		   si,y 
 									  add 		   si,25                   ;finish at Y=y+25 at X=x and X=x+1
 
-
-    score_bar1:						  mov 		   dx,y
+    score_bar1:						  mov 		   dx,y                    ;start at Y=y
     score_bar2:						  int 		   10h
 									  inc 		   dx
-									  cmp 		   dx,si
+									  cmp 		   dx,si                   ;finish at Y=y+25
 									  jnz 		   score_bar2
 									  inc 		   cx
 									  cmp 		   cx,di
@@ -62,33 +61,33 @@ ENDM score_bar_separators
 ;______________________________________________________________________________________________________________________________________________
 
 main_screen MACRO username_buffer, username, actual_size, name_message, enter_key, error_message, p, player_color
-LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated, c
+LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated, colored
 
 	;-------------------------------- clear screen
-									  mov si,0                ;When the user enters an invalid name the SI register holds -1 otherwise 0
+									  mov si,0            ;When the user enters an invalid username the SI register holds -1 otherwise 0
 	reEnter:                          clear_screen
 
 
-	;-------------------------------  move cursor to (36,4)
+	;-------------------------------  move cursor to (36,4) and print '[PLAYER #]' with the player's color char by char
 	
-	                                  mov   bh,0
-									  mov   dh,4
-									  mov   cx,1
-									  mov   bl,player_color
+	                                  mov   bh,0                     ;page 0
+									  mov   dh,4                           
+									  mov   cx,1                     ;print the char one time
+									  mov   bl,player_color          ;player color
 	                                  mov   dl,36
-									  mov   di,0
+									  mov   di,0                     ;to indicate the index of the char to be printed
 
-	c:                                mov   ah,2
+	colored:                          mov   ah,2
 									  int   10h
-									  inc   dl
+									  inc   dl                       ;inc the x-value of the cursor to print the next char
 
 	;-------------------------------- print '[PLAYER #]'
 	                                  mov   ah,9
-	                                  mov   al,p[di]
-									  inc   di  
-									  int   10h
-	                                  cmp   di,10
-									  jnz   c
+	                                  mov   al,p[di]                 ;the char to be printed
+									  inc   di                       ;inc the index to the next char
+									  int   10h                      ;print the char
+	                                  cmp   di,10                    ;the size of the string
+									  jnz   colored
 
 	;-------------------------------- move cursor to (29,10)
 	                                  mov   ah,2
@@ -145,15 +144,15 @@ LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated, c
 	;-------------------------------- validate name
 	                                  cmp   username, 'a'
 	                                  jae   v1
-	                                  mov   bl,0
+	                                  mov   bl,0                 ;this indicates that the first char is less than 'a'
 	                                  jmp   n1
-	v1:                               mov   bl,1
+	v1:                               mov   bl,1                 ;this indicates that the first char is greater than or equal to 'a'
 
 	n1:                               cmp   username,'z'
 	                                  jbe   v2
-	                                  mov   bh,0
+	                                  mov   bh,0                ;this indicates that the first char is greater than 'z'
 	                                  jmp   n2
-	v2:                               mov   bh,1
+	v2:                               mov   bh,1                ;this indicates that the first char is less than or equal to 'z'
 
 	n2:                               and   bh,bl
 
@@ -948,7 +947,6 @@ MAIN PROC FAR
 	                                  call                  UpdateBallPosition
 	                                  call                  CheckIfBallInsideNet
 	                                  
-
 	                                  jmp                   GameProcess
 
 	end_program:                      mov                   ah,4ch
@@ -1058,7 +1056,7 @@ PlayerFall proc    near
 PlayerFall endp
 
 CheckKeyPressed PROC
-	                                  mov                   si,0
+	                                  mov                   si,0                                                                                    	;if the user pressed on F4 during a game the SI register will hold -1 otherwise 0
 
 	ReadKey:                          mov                   ah,1                                                                                    	;Get key pressed Don't Wait for the key
 	                                  int                   16h
@@ -1091,7 +1089,7 @@ CheckKeyPressed PROC
 	                                  cmp                   al,'W'
 	                                  JZ                    PLAYER2_UP
                          
-	;-------------------------------- this is for game's exit
+	;-------------------------------- this is for the game's exit
 	                                  cmp                   ah,3eh
 	                                  jnz                   Exit                                                                                    	;F4 key
 	                                  mov                   si, -1                                                                                  	;to indicate that the game will exit
@@ -1601,7 +1599,7 @@ drawGoalKeepers endp
 
 program_functionalities proc
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (25,10)
 	                                  mov                   ah,2
 	                                  mov                   dl,25
 	                                  mov                   dh,10
@@ -1613,7 +1611,7 @@ program_functionalities proc
 	                                  mov                   ah,9
 	                                  int                   21h
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (25,12)
 	                                  mov                   ah,2
 	                                  mov                   dl,25
 	                                  mov                   dh,12
@@ -1625,7 +1623,7 @@ program_functionalities proc
 	                                  mov                   ah,9
 	                                  int                   21h
 
-	;-------------------------------- move cursor
+	;-------------------------------- move cursor to (25,14)
 	                                  mov                   ah,2
 	                                  mov                   dl,25
 	                                  mov                   dh,14
@@ -1637,19 +1635,19 @@ program_functionalities proc
 	                                  mov                   ah,9
 	                                  int                   21h
 
-	;-------------------------------- status bar
+	;-------------------------------- status bar dashes
 	                                  mov                   ah,2
-	                                  mov                   bh,0
-	                                  mov                   dh,22
+	                                  mov                   bh,0                                                                                    	;page 0
+	                                  mov                   dh,22                                                                                   	;Y=22
 
 	                                  mov                   dl,-1
-	status_dashes:                    inc                   dl
-	                                  int                   10h
-	                                  mov                   bl,dl
-	                                  mov                   dl,'-'
-	                                  int                   21h
-	                                  mov                   dl,bl
-	                                  cmp                   dl,79
+	status_dashes:                    inc                   dl                                                                                      	;start from X=0
+	                                  int                   10h                                                                                     	;move cursor
+	                                  mov                   bl,dl                                                                                   	;hold dl value temporarily because it will change
+	                                  mov                   dl,'-'                                                                                  	;character to be printed
+	                                  int                   21h                                                                                     	;print the char
+	                                  mov                   dl,bl                                                                                   	;re-assign the value of dl again
+	                                  cmp                   dl,79                                                                                   	;finish at X=79 'last column'
 	                                  jnz                   status_dashes
 
 	                                  ret
@@ -1658,38 +1656,40 @@ program_functionalities endp
 
 print_game_strings proc
 
-	;-------------------------------- calculate the center of the rectangle of player one name with respect to the actual size of the username
+	;-------------------------------- calculate the center of the rectangle that hold player one in the score bar name with respect to the actual size of the username
+	;-------------------------------- this is done to write the username in the center of the rectangle
+	;-------------------------------- the formula used: x = (max_size1 - actual_size1)/2
 	                                  mov                   ah,0
 	                                  mov                   al,max_size1
 	                                  sub                   al,actual_size1
 	                                  mov                   bl,2
 	                                  div                   bl
 
-	;-------------------------------- move cursor to (calculated x, 18)
+	;-------------------------------- move cursor to (calculated x, 18) and print the username with the player's color
 	                                  mov                   cl,actual_size1
 	                                  mov                   ch,0
-	                                  mov                   bp,cx
-	                                  mov                   dl,20
-	                                  add                   dl,al
-	                                  mov                   dh,18
-	                                  mov                   bh,0
-	                                  mov                   bl,7
-	                                  mov                   di,0
-	                                  mov                   cx,1
-
-
+	                                  mov                   bp,cx                                                                                   	;BP register is used to end the loop when the username is printed
+	                                  mov                   dl,20                                                                                   	;the first place in the rectangle that hold the username of the first player
+	                                  add                   dl,al                                                                                   	;shift dl by the calculated value using the formula written above
+	                                  mov                   dh,18                                                                                   	;Y=18
+	                                  mov                   bh,0                                                                                    	;page 0
+	                                  mov                   bl,7                                                                                    	;the color of player 1
+	                                  mov                   di,0                                                                                    	;the index of the character to be printed
+	                                  mov                   cx,1                                                                                    	;print the char one time
 
 	c1:                               mov                   ah,2
-	                                  int                   10h
-	                                  inc                   dl
+	                                  int                   10h                                                                                     	;move cursor
+	                                  inc                   dl                                                                                      	;inc x to write the next char
 	                                  mov                   ah,9
-	                                  mov                   al,username1[di]
-	                                  inc                   di
-	                                  int                   10h
-	                                  cmp                   di,bp
+	                                  mov                   al,username1[di]                                                                        	;the char to be printed
+	                                  inc                   di                                                                                      	;inc the index to print the next char
+	                                  int                   10h                                                                                     	;print the char
+	                                  cmp                   di,bp                                                                                   	;check if the username is printed
 	                                  jnz                   c1
 
-	;-------------------------------- calculate the center of the rectangle of player two name with respect to the actual size of the username
+	;-------------------------------- calculate the center of the rectangle that hold player two in the score bar name with respect to the actual size of the username
+	;-------------------------------- this is done to write the username in the center of the rectangle
+	;-------------------------------- the formula used: x = (max_size2 - actual_size2)/2
 	                                  mov                   ah,0
 	                                  mov                   al,max_size2
 	                                  sub                   al,actual_size2
@@ -1699,29 +1699,27 @@ print_game_strings proc
 	;-------------------------------- move cursor to (calculated x, 18) and print the name char by char with player's color
 	                                  mov                   cl,actual_size2
 	                                  mov                   ch,0
-	                                  mov                   bp,cx
-	                                  mov                   dl,45
-	                                  add                   dl,al
-	                                  mov                   dh,18
-	                                  mov                   bh,0
-	                                  mov                   bl,9
-	                                  mov                   di,0
-	                                  mov                   cx,1
-
-
+	                                  mov                   bp,cx                                                                                   	;BP register is used to end the loop when the username is printed
+	                                  mov                   dl,45                                                                                   	;the first place in the rectangle that hold the username of the first player
+	                                  add                   dl,al                                                                                   	;shift dl by the calculated value using the formula written above
+	                                  mov                   dh,18                                                                                   	;Y=18
+	                                  mov                   bh,0                                                                                    	;page 0
+	                                  mov                   bl,9                                                                                    	;player two color
+	                                  mov                   di,0                                                                                    	;the index of the first char of the username
+	                                  mov                   cx,1                                                                                    	;print the char one time
 
 	c2:                               mov                   ah,2
-	                                  int                   10h
-	                                  inc                   dl
+	                                  int                   10h                                                                                     	;move cursor
+	                                  inc                   dl                                                                                      	;inc x to write the next char
 	                                  mov                   ah,9
-	                                  mov                   al,username2[di]
-	                                  inc                   di
-	                                  int                   10h
-	                                  cmp                   di,bp
+	                                  mov                   al,username2[di]                                                                        	;the char to be printed
+	                                  inc                   di                                                                                      	;inc the index to print the next char
+	                                  int                   10h                                                                                     	;print the char
+	                                  cmp                   di,bp                                                                                   	;check if the username is printed
 	                                  jnz                   c2
 
 
-	;-------------------------------- move cursor to the last line
+	;-------------------------------- move cursor to the last line (0,24)
 	                                  mov                   ah,2
 	                                  mov                   dl,0
 	                                  mov                   dh,24
@@ -1748,13 +1746,13 @@ print_player1_score proc
 	                                  int                   10h
 
 	;-------------------------------- print score
-	                                  mov                   cx,1
+	                                  mov                   cx,1                                                                                    	;print the char one time
 	                                  mov                   al, player1_score
-	                                  add                   al,30h
-	                                  mov                   bh,0
-	                                  mov                   bl,7
+	                                  add                   al,30h                                                                                  	;convert the score to ASCII
+	                                  mov                   bh,0                                                                                    	;page 0
+	                                  mov                   bl,7                                                                                    	;color of player 1
 	                                  mov                   ah,9
-	                                  int                   10h
+	                                  int                   10h                                                                                     	;print the score
 
 	                                  ret
 print_player1_score endp
@@ -1771,13 +1769,13 @@ print_player2_score proc
 	                                  int                   10h
 
 	;-------------------------------- print score
-	                                  mov                   cx,1
+	                                  mov                   cx,1                                                                                    	;print the char one time
 	                                  mov                   al, player2_score
-	                                  add                   al,30h
-	                                  mov                   bh,0
-	                                  mov                   bl,9
+	                                  add                   al,30h                                                                                  	;convert the score to ASCII
+	                                  mov                   bh,0                                                                                    	;page 0
+	                                  mov                   bl,9                                                                                    	;color of player 2
 	                                  mov                   ah,9
-	                                  int                   10h
+	                                  int                   10h                                                                                     	;print the score
 
 	                                  ret
 print_player2_score endp
