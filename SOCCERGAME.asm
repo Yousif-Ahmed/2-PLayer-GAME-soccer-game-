@@ -3330,24 +3330,26 @@ EXTRA_DATA2 SEGMENT
 	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16
 	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16
 
-
+; PLAYER 2 winns parameters (DRAWING)
 	WINS2_W               equ              150
 	WINS2_H               equ              77
 	WINS2_X               equ              254
 	WINS2_Y               equ              0
-
+ ; PLAYER 1 WINNS PARAMETER (DRAWING)
 	WINS1_W               equ              144
 	WINS1_H               equ              77
 	WINS1_X               equ              248
 	WINS1_Y               equ              0
 	
-
+; MAX NUMBER OF GOALS IN LEVEL1 
 	MAX_GOAL_IN_level1    equ              3
+
+;GOOOOAL PARAMETER (DRAWING)
 	GOAL_X                DW               250
 	GOAL_Y                DW               20
 	GOAL_W                equ              100
 	GOAL_H                equ              35
-
+; NETS PARAMTER (DRAWING)
 	GoalKeeperW           equ              30
 	GoalKeeperH           equ              150
 
@@ -3358,7 +3360,7 @@ EXTRA_DATA2 SEGMENT
 	GoalKeeperRightY      equ              45
 
 
-
+;BALL PRAMETER FOR (DROWING) && (BOUNCING) && (MOVEMENTS)
 	BallX                 Dw               285
 	BallY                 Dw               160
 	BallSpeedX            DW               0
@@ -3369,13 +3371,15 @@ EXTRA_DATA2 SEGMENT
 	BallMaxSpeedX         equ              10
 	BallMaxSpeedY         equ              -15
 
+; PLAYER1 PRAMETER FOR (DRAWING) && (MOVEMENTS)
 	Player1W              equ              43
 	Player1H              equ              105
 	Player1X              DW               47
 	Player1Y              DW               91
 	Player1SpeedX         DW               05h
 	Player1SpeedY         DW               32h
-    
+
+; PLAYER2 PRAMETER FOR (DRAWING) && (MOVEMENTS)    
 	Player2W              equ              43
 	Player2H              equ              105
 	Player2X              DW               550
@@ -3384,19 +3388,19 @@ EXTRA_DATA2 SEGMENT
 	Player2SpeedY         DW               32h
     
 
-
-
+ ; SCREEN PARAMETER 
 	ScreenH               equ              196
 	SCreenW               equ              640
 	Window_Bounds         dw               40
-	;Gravity Variables
+
+;GRAVITY VARIABLES FOR PLAYERS JUMP AND GRAVITY
 	GravityLine           dw               91                                                                                                                                                                                                    	;the highest height the player can reach
 	LandLine              dw               196                                                                                                                                                                                                   	;the lowest height the player can reach
 	GravityAccleration    dw               10d
 
 	Player1FallStatus     dw               0
 	Player2FallStatus     dw               0
-
+;GRAVITY VARIABLES FOR BALL
 	Gravity               equ              1                                                                                                                                                                                                     	;gravity acceleration
 	FractionDecreaseSpeed equ              2                                                                                                                                                                                                     	;speed loss due to faction between ball and walls
 	FractionIncreaseSpeed equ              1
@@ -3531,7 +3535,7 @@ MAIN PROC FAR
 	                                  call                  DRAWE_PLAYER2
 	                                  call                  delay
 	                                 
-
+    ;-------------------------------- GAME MAIN LOOP (INFINITE LOOP UNTILL THE PLAYER PRESS F4)
 	GameProcess:                      call                  CheckKeyPressed
 
 	;-------------------------------- check if the user pressed on F4
@@ -3630,6 +3634,9 @@ DRAW_SOCCER PROC
 	ENDING_L1:                        
 	                                  ret
 DRAW_SOCCER ENDP
+
+;DESCRIPTION
+;THIS FUNCTION TO DELAY AFTER DRAWING TO RENDER PIXELS
 delay proc
 	                                  mov                   cx ,0
 	                                  mov                   dx ,0a120h
@@ -3637,7 +3644,7 @@ delay proc
 	                                  int                   15h
 	                                  ret
 delay ENdP
-
+; REFREASH SCREEN PART EVERY FRAME TO DRAW BALL AND PLAYERS IN THE NEW POSITION
 REFREASH_SCREEN_PART PROC
 
 	                                  mov                   di,196
@@ -3673,6 +3680,11 @@ REFREASH_SCREEN_PART PROC
 
 REFREASH_SCREEN_PART ENDP
 
+;DESCRIPTION 
+;THIS FUNCTION FOR CHECKING GRAVINTY OF PLAYER1 && PLAYER 2
+;THEN IF THE PLAYER 1 OR PLAYER 2 IS ABOVE THE CRAVITY LINE THEN WE SHOULD FALL IT DWON
+;WE ACTIVE FALLING PLAYER WITH PARAMETER FALL PLAYER STATUS WITH VALUE 1 IF HE NEEDS TO FALL
+;THEN WE CAN NOW NOW THAN PLAYER NEED TO FALL DOWN WITH PLAYER FALL STATUS
 
 PlayerGravity proc near
 
@@ -3699,6 +3711,11 @@ PlayerGravity proc near
 	                                  mov                   Player2FallStatus,ax
 	                                  ret
 PlayerGravity endp
+
+;DESCRIPTION
+;WE CHECK PLAYER FALL STATUS FOR EACH PLAYER 
+;IF PLAYER FALL STATUS EQUAL 1 THEN WE MAKE PLAYER DOWN EVERY FRAME UNTIL HE LAND LINE IN THE GROUD 
+
 PlayerFall proc    near
 	                                  mov                   ax,Player1FallStatus
 	                                  cmp                   ax,1h
@@ -3732,6 +3749,10 @@ PlayerFall proc    near
 	ENDING:                           
 	                                  ret
 PlayerFall endp
+
+;DESCRIPTION 
+;IN THIS FUNCTION WE CHECK KEYS PRESSED AND MOVE PLAYERS (UP - LEFT - RIGHT) DUE TO THE KEY PRESSED
+; AFTER WE GET THE PRESSED KEY WE SHIFT PLAYER COORDINATE  
 
 CheckKeyPressed PROC
 	                                  mov                   si,0                                                                                    	;if the user pressed on F4 during a game the SI register will hold -1 otherwise 0
@@ -4009,7 +4030,10 @@ DRAW_PLAYER1_WINS PROC
 	ENDING_W1:                        
 	                                  ret
 DRAW_PLAYER1_WINS ENDP
-	;description
+
+;DESCRIPTION
+;IN THIS FUNCTION WE CHECK BALL COLLISION WITH SCREEN EDGES
+
 CheckBallCollisionWithScreen PROC
 
 
@@ -4059,7 +4083,9 @@ CheckBallCollisionWithScreen PROC
 
 CheckBallCollisionWithScreen ENDP
 
-	;description
+;DESCRIPTION
+;IN THIS FUNCTION WE UPDATE BALL POSITION DUE TO PLAYER SHOOTING IT 
+
 UpdateBallPosition PROC
 	;check if a player has hit the ball and still the ball is affected
 	NoAffectOfLastPlayerShoot:        
