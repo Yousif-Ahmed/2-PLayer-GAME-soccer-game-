@@ -3453,17 +3453,17 @@ MAIN PROC FAR
 	                                  int                   16h                                                                                     	;get the key
 
 	                                  cmp                   ah,1
-	                                  jz                    end                                                                                     	;if the key is ESC
+	                                  jz                    end_                                                                                     	;if the key is ESC
 
 	                                  cmp                   ah,3ch
 	                                  jz                    play_game                                                                               	;if the key is F2
 
 	                                  cmp                   ah,3bh
-	                                  jz                    end                                                                             	;if the key is F1 (for chatting) 'This will be changed in the next phase'
+	                                  jz                    end_                                                                             	;if the key is F1 (for chatting) 'This will be changed in the next phase'
 
 	                                  jmp                   key_specify_action
 
-	end:                              jmp                   end_program
+	end_:                              jmp                   end_program
 	play_game:                        
 	                                  mov                   ax, 4F02h
 	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
@@ -3483,7 +3483,9 @@ MAIN PROC FAR
 	                                  int                   16h
 	                                  jz                    t
 
-	                                  clear_screen
+	                                   mov                   ax, 4F02h
+	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
+	                                  INT                   10h
 	                                  mov                   ax,@data
 	                                  mov                   ds,ax
 	                                  assume                DS:@DATA
