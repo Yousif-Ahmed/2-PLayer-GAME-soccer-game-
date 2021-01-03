@@ -10,6 +10,16 @@ ENDM clear_screen
 
 ;__________________________________________________________________________________________________________________________________________
 
+move_cursor MACRO x, y
+									  mov ah,2 
+									  mov bh,0
+									  mov dl,x
+									  mov dh,y 
+									  int 10h
+ENDM move_cursor
+
+;__________________________________________________________________________________________________________________________________________
+
 ;This macro prints the in-game line separators using the graphics mode from x to xf and from y to y+2
 print_game_separators MACRO x,y,xf
 LOCAL sep1, sep2
@@ -189,9 +199,9 @@ ENDM  main_screen
 .MODEL SMALL
 .STACK 64
 
-EXTRA_DATA SEGMENT
+EXTRA_DATA1 SEGMENT
 
-	SCREAN_LOGO DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
+	SCREEN_LOGO DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	            DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	            DB  31, 31, 31, 31, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
 	            DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
@@ -1819,11 +1829,11 @@ EXTRA_DATA SEGMENT
 	
 	LOGO_W      equ 290
 	LOGO_H      equ 224
-​ LOGO_X equ 175
+​ LOGO_X  	 equ 175
 	LOGO_Y      equ 10
 
 	
-EXTRA_DATA ENDS
+EXTRA_DATA1 ENDS
 
 EXTRA_DATA2 SEGMENT
 	SOCCER      DB  31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31
@@ -2163,7 +2173,7 @@ EXTRA_DATA2 SEGMENT
 
 	SOCCERW     equ 157
 	SOCCERH     equ 85
-​ SOCCER_X equ 232
+​ SOCCER_X 	 equ 232
 	SOCCER_Y    equ 240
 ​
 	EXTRA_DATA2 ENDS
@@ -3415,6 +3425,8 @@ EXTRA_DATA2 SEGMENT
 
 	end_game_str          db               'To end the game, Press F4','$'
 
+	load_screen_str       db               'Press any key to continue','$'
+
 	                      username1_buffer label byte
 	max_size1             db               16
 	actual_size1          db               ?
@@ -3444,7 +3456,7 @@ MAIN PROC FAR
 	functionalites:                   clear_screen
 	                                  call                  program_functionalities
 
-
+	;-------------------------------- wait for a key in the functionalities screen
 	key_specify_action:               mov                   ah,1
 	                                  int                   16h
 	                                  jz                    key_specify_action                                                                      	;check if a key is pressed
@@ -3453,42 +3465,57 @@ MAIN PROC FAR
 	                                  int                   16h                                                                                     	;get the key
 
 	                                  cmp                   ah,1
-	                                  jz                    end_                                                                                     	;if the key is ESC
+	                                  jz                    end_                                                                                    	;if the key is ESC
 
 	                                  cmp                   ah,3ch
 	                                  jz                    play_game                                                                               	;if the key is F2
 
 	                                  cmp                   ah,3bh
-	                                  jz                    end_                                                                             	;if the key is F1 (for chatting) 'This will be changed in the next phase'
+	                                  jz                    end_                                                                                    	;if the key is F1 (for chatting) 'This will be changed in the next phase'
 
 	                                  jmp                   key_specify_action
 
-	end_:                              jmp                   end_program
-	play_game:                        
-	                                  mov                   ax, 4F02h
+	end_:                             jmp                   end_program                                                                             	;this is because the program can't jump directly
+	
+	play_game:                        mov                   ax, 4F02h
 	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
-	                                  INT                   10h                                                                                     	;execute the configuration
-				                     
-	                                  mov                   ax,EXTRA_DATA
+	                                  int                   10h                                                                                     	;execute the configuration
+	
+	;-------------------------------- to print the game's logo
+	                                  mov                   ax,EXTRA_DATA1
 	                                  mov                   DS,ax
-	                                  assume                DS:EXTRA_DATA
+	                                  assume                DS:EXTRA_DATA1
 	                                  call                  DRAW_START_LOGO
 
 	                                  mov                   ax,EXTRA_DATA2
 	                                  mov                   DS,ax
 	                                  assume                DS:EXTRA_DATA2
 	                                  call                  DRAW_SOCCER
-
-	t:                                mov                   ah,1
-	                                  int                   16h
-	                                  jz                    t
-
-	                                   mov                   ax, 4F02h
-	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
-	                                  INT                   10h
+									  
+	;-------------------------------- use the normal data segment
 	                                  mov                   ax,@data
 	                                  mov                   ds,ax
 	                                  assume                DS:@DATA
+
+	;-------------------------------- print 'press any key to continue'
+	                                  move_cursor           1bh, 18h
+	                                  mov                   dx,offset load_screen_str
+	                                  mov                   ah,9
+	                                  int                   21h
+
+
+	wait_key:                         mov                   ah,1
+	                                  int                   16h
+	                                  jz                    wait_key
+
+	;-------------------------------- get the key because if the user pressed on F4, the game will not exit
+	                                  mov                   ah,0
+	                                  int                   16h
+									  
+	;-------------------------------- change mode to graphics mode to clear the screen
+	                                  mov                   ax, 4F02h
+	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
+	                                  int                   10h
 									  
 
 	                                  call                  score_bar
@@ -3505,9 +3532,7 @@ MAIN PROC FAR
 	                                  call                  delay
 	                                 
 
-	GameProcess:                      
-	                                 
-	                                  call                  CheckKeyPressed
+	GameProcess:                      call                  CheckKeyPressed
 
 	;-------------------------------- check if the user pressed on F4
 	                                  cmp                   si,-1
@@ -3522,7 +3547,6 @@ MAIN PROC FAR
 	;-------------------------------------------------------------------------
 
 	continue_game:                    
-	                                
 	                                  call                  PlayerGravity
 	                                  call                  PlayerFall
 	                                  call                  REFREASH_SCREEN_PART
@@ -3534,8 +3558,8 @@ MAIN PROC FAR
 	                                  call                  CheckBallCollisionWithPlayers
 	                                  call                  UpdateBallPosition
 	                                  call                  CheckIfBallInsideNet
-	                                  
 	                                  jmp                   GameProcess
+
 
 	end_program:                      mov                   ah,4ch
 	                                  int                   21h
@@ -3546,7 +3570,7 @@ DRAW_START_LOGO PROC
 	                                  MOV                   AH,0Bh                                                                                  	;set the configuration
 	                                  MOV                   CX, LOGO_W                                                                              	;set the width (X) up to 64 (based on image resolution)
 	                                  MOV                   DX, LOGO_H                                                                              	;set the hieght (Y) up to 64 (based on image resolution)
-	                                  mov                   DI, offset SCREAN_LOGO                                                                  	; to iterate over the pixels
+	                                  mov                   DI, offset SCREEN_LOGO                                                                  	; to iterate over the pixels
 	                                  jmp                   START_LOGO                                                                              	;Avoid drawing before the calculations
 	DRAW_LOGO:                        
 	                                  MOV                   AH,0Ch                                                                                  	;set the configuration to writing a pixel
@@ -4318,11 +4342,7 @@ drawGoalKeepers endp
 program_functionalities proc
 
 	;-------------------------------- move cursor to (25,10)
-	                                  mov                   ah,2
-	                                  mov                   dl,25
-	                                  mov                   dh,10
-	                                  mov                   bh,0
-	                                  int                   10h
+	                                  move_cursor           25,10
 
 	;-------------------------------- print chatting message
 	                                  mov                   dx,offset chatting_message
@@ -4330,11 +4350,7 @@ program_functionalities proc
 	                                  int                   21h
 
 	;-------------------------------- move cursor to (25,12)
-	                                  mov                   ah,2
-	                                  mov                   dl,25
-	                                  mov                   dh,12
-	                                  mov                   bh,0
-	                                  int                   10h
+	                                  move_cursor           25,12
 
 	;-------------------------------- print game message
 	                                  mov                   dx,offset game_message
@@ -4342,12 +4358,7 @@ program_functionalities proc
 	                                  int                   21h
 
 	;-------------------------------- move cursor to (25,14)
-	                                  mov                   ah,2
-	                                  mov                   dl,25
-	                                  mov                   dh,14
-	                                  mov                   bh,0
-	                                  int                   10h
-
+	                                  move_cursor           25,14
 	;-------------------------------- print exit program message
 	                                  mov                   dx,offset exit_program_message
 	                                  mov                   ah,9
@@ -4438,11 +4449,7 @@ print_game_strings proc
 
 
 	;-------------------------------- move cursor to the last line (0,24)
-	                                  mov                   ah,2
-	                                  mov                   dl,0
-	                                  mov                   dh,24
-	                                  mov                   bh,0
-	                                  int                   10h
+	                                  move_cursor           0,24
 
 	;-------------------------------- print the end game string
 	                                  mov                   dx,offset end_game_str
@@ -4457,11 +4464,7 @@ print_game_strings endp
 print_player1_score proc
 
 	;-------------------------------- move cursor to (38,18)
-	                                  mov                   ah,2
-	                                  mov                   dh,18
-	                                  mov                   dl,38
-	                                  mov                   bh,0
-	                                  int                   10h
+	                                  move_cursor           38,18
 
 	;-------------------------------- print score
 	                                  mov                   cx,1                                                                                    	;print the char one time
@@ -4480,12 +4483,7 @@ print_player1_score endp
 print_player2_score proc
 
 	;-------------------------------- move cursor to (41,18)
-	                                  mov                   ah,2
-	                                  mov                   dh,18
-	                                  mov                   dl,41
-	                                  mov                   bh,0
-	                                  int                   10h
-
+	                                  move_cursor           41,18
 	;-------------------------------- print score
 	                                  mov                   cx,1                                                                                    	;print the char one time
 	                                  mov                   al, player2_score
