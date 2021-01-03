@@ -3482,7 +3482,10 @@ MAIN PROC FAR
 	t:                                mov                   ah,1
 	                                  int                   16h
 	                                  jz                    t
-
+									  
+	                                  mov                   ah,0
+	                                  int                   16h
+			
 	                                  mov                   ax, 4F02h
 	                                  mov                   bx, 0100h                                                                               	; 640x400 screen graphics mode
 	                                  INT                   10h
