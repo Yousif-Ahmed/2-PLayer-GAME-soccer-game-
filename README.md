@@ -5,3 +5,7 @@ A 2-Player game using assembly
 # SCREEN SHOOTS
 <img src="SCREAN_SHOOTS/STARTSCREAN.jpg">
 
+<img src= "SCREAN_SHOOTS/GOOOAL.jpg">
+
+<img src= "SCREAN_SHOOTS/PLAYER_WINNER.jpg">
+
