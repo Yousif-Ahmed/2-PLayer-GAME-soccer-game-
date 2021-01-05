@@ -2,7 +2,8 @@
 A 2-Player game using assembly 
 "SOCCER PHYSICS"
 
-#CHARACTERS 
+# CHARACTERS 
+
 <img src="GAME_GUI/player1.bmp">
 
 <img src= "GAME_GUI/player2.bmp">
