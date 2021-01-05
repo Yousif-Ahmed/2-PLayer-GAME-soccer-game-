@@ -3,10 +3,10 @@ A 2-Player game using assembly
 "SOCCER PHYSICS"
 
 # CHARACTERS 
-
-<img src="GAME_GUI/player1.bmp">
-
-<img src= "GAME_GUI/player2.bmp">
+<p float="left">
+  <img src="src="GAME_GUI/player1.bmp" width="100" />
+  <img src="GAME_GUI/player2.bmp" width="100" /> 
+</p>
 
 
 # SCREEN SHOOTS
