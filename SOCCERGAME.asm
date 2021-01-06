@@ -3734,7 +3734,9 @@ DRAWE_PLAYER2 PROC
 	ENDING2:                          
 DRAWE_PLAYER2 ENDP
 
-
+;description
+;this procedure draws the ball pixels in the ball current position
+;using ballx and bally that indicate the ball x and y point
 DrawingBall PROC
 	                                  mov                   dx,BallY
 	                                  mov                   cx,BallX
@@ -4194,7 +4196,8 @@ CheckKeyPressed ENDP
 
 ;DESCRIPTION
 ;IN THIS FUNCTION WE CHECK BALL COLLISION WITH SCREEN EDGES
-
+;IF BALL HIT ANY EDGE IT DECREASE THE BALL SPEED IN BOTH DIRECTIONS
+;AND INVERT THE SPEED IN CERTAIN DIRECTION TO SIMULATE BALL PHYICS
 CheckBallCollisionWithScreen PROC
 
 
@@ -4246,7 +4249,8 @@ CheckBallCollisionWithScreen ENDP
 
 ;DESCRIPTION
 ;IN THIS FUNCTION WE UPDATE BALL POSITION DUE TO PLAYER SHOOTING IT 
-
+;WE ALSO APPLY GRAVITY TO THE BALL AND MAKE SURE THAT THE BALL DOESN'T
+;CROSS THE BOUNDRIES
 UpdateBallPosition PROC
 	;check if a player has hit the ball and still the ball is affected
 	NoAffectOfLastPlayerShoot:        
@@ -4321,7 +4325,9 @@ UpdatePlayer1Position PROC
 	                                  ret
 UpdatePlayer1Position ENDP
 
-	;description
+;description
+;THIS PROCEDURE CHECK IF THE BALL COLLIDE WITH A PLAYER
+;AND INCREASE THE SPEED OF THE BALL IF IT HIT THE PLAYER
 CheckBallCollisionWithPlayers PROC
 	;first check the x axis maxx1>minx2 && maxx2>minx1
 	                                  mov                   Ax,BallX
@@ -4584,7 +4590,9 @@ score_bar proc
 	                                  ret
 score_bar endp
 
-	;description
+;description
+;HERE WE CHECK IF THE BALL IS INSIDE THE NET AND INCREASE
+;THE SCORE OF THE CROSSPONDING PLAYER
 CheckIfBallInsideNet PROC
 
 	; check if ball inside the left net
@@ -4665,7 +4673,8 @@ CheckIfBallInsideNet PROC
 	                                  ret
 CheckIfBallInsideNet ENDP
 
-	;description
+;description
+;INTTIALIZE THE VARIABLES WE USE IN THE PROGRAM
 PutElementsInIntialPosition PROC
 	                                  mov                   BallX,285
 	                                  mov                   BallY,160
