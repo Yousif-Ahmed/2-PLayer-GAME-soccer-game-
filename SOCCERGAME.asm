@@ -3330,26 +3330,26 @@ EXTRA_DATA2 SEGMENT
 	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 31, 31, 31, 31, 31, 31, 31, 16, 16
 	                      DB               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16
 
-; PLAYER 2 winns parameters (DRAWING)
+	; PLAYER 2 winns parameters (DRAWING)
 	WINS2_W               equ              150
 	WINS2_H               equ              77
 	WINS2_X               equ              254
 	WINS2_Y               equ              0
- ; PLAYER 1 WINNS PARAMETER (DRAWING)
+	; PLAYER 1 WINNS PARAMETER (DRAWING)
 	WINS1_W               equ              144
 	WINS1_H               equ              77
 	WINS1_X               equ              248
 	WINS1_Y               equ              0
 	
-; MAX NUMBER OF GOALS IN LEVEL1 
+	; MAX NUMBER OF GOALS IN LEVEL1
 	MAX_GOAL_IN_level1    equ              3
 
-;GOOOOAL PARAMETER (DRAWING)
+	;GOOOOAL PARAMETER (DRAWING)
 	GOAL_X                DW               250
 	GOAL_Y                DW               20
 	GOAL_W                equ              100
 	GOAL_H                equ              35
-; NETS PARAMTER (DRAWING)
+	; NETS PARAMTER (DRAWING)
 	GoalKeeperW           equ              30
 	GoalKeeperH           equ              150
 
@@ -3360,7 +3360,7 @@ EXTRA_DATA2 SEGMENT
 	GoalKeeperRightY      equ              45
 
 
-;BALL PRAMETER FOR (DROWING) && (BOUNCING) && (MOVEMENTS)
+	;BALL PRAMETER FOR (DROWING) && (BOUNCING) && (MOVEMENTS)
 	BallX                 Dw               285
 	BallY                 Dw               160
 	BallSpeedX            DW               0
@@ -3371,7 +3371,7 @@ EXTRA_DATA2 SEGMENT
 	BallMaxSpeedX         equ              10
 	BallMaxSpeedY         equ              -15
 
-; PLAYER1 PRAMETER FOR (DRAWING) && (MOVEMENTS)
+	; PLAYER1 PRAMETER FOR (DRAWING) && (MOVEMENTS)
 	Player1W              equ              43
 	Player1H              equ              105
 	Player1X              DW               47
@@ -3379,7 +3379,7 @@ EXTRA_DATA2 SEGMENT
 	Player1SpeedX         DW               05h
 	Player1SpeedY         DW               32h
 
-; PLAYER2 PRAMETER FOR (DRAWING) && (MOVEMENTS)    
+	; PLAYER2 PRAMETER FOR (DRAWING) && (MOVEMENTS)
 	Player2W              equ              43
 	Player2H              equ              105
 	Player2X              DW               550
@@ -3388,19 +3388,19 @@ EXTRA_DATA2 SEGMENT
 	Player2SpeedY         DW               32h
     
 
- ; SCREEN PARAMETER 
+	; SCREEN PARAMETER
 	ScreenH               equ              196
 	SCreenW               equ              640
 	Window_Bounds         dw               40
 
-;GRAVITY VARIABLES FOR PLAYERS JUMP AND GRAVITY
+	;GRAVITY VARIABLES FOR PLAYERS JUMP AND GRAVITY
 	GravityLine           dw               91                                                                                                                                                                                                    	;the highest height the player can reach
 	LandLine              dw               196                                                                                                                                                                                                   	;the lowest height the player can reach
 	GravityAccleration    dw               10d
 
 	Player1FallStatus     dw               0
 	Player2FallStatus     dw               0
-;GRAVITY VARIABLES FOR BALL
+	;GRAVITY VARIABLES FOR BALL
 	Gravity               equ              1                                                                                                                                                                                                     	;gravity acceleration
 	FractionDecreaseSpeed equ              2                                                                                                                                                                                                     	;speed loss due to faction between ball and walls
 	FractionIncreaseSpeed equ              1
@@ -3443,12 +3443,28 @@ EXTRA_DATA2 SEGMENT
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 
+	;UART used variables
+
+	IsMainUser            db               1
+	GameStatus            db               0000
+	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,                                                                                                                                                                               	;boolean to check if it's the main player who updates the game
+	;	RecievedPlayerX       dw               ?                                                                                                                                                                                                     	;player's recieved x position
+	;	RecievedPlayerY       dw               ?                                                                                                                                                                                                     	;player's recieved y position
+	;	RecievedBallX         dw               ?                                                                                                                                                                                                     	;ball recieved x position
+	;	RecievedBallY         dw               ?                                                                                                                                                                                                     	;ball recieved y position
+	;	RecievedStatus        db               ?                                                                                                                                                                                                     	;represent game status 0000 dcba   a , b ,c &d are LST nibble
+	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,
+	;	SendStatus            db               ?
+
 
 .CODE
 MAIN PROC FAR
 
+						
 	                                  mov                   ax, @data
 	                                  mov                   DS, ax
+
+	                                  call                  IntializeUARTConfigurations
 
 	;-------------------------------- main screen for the two players
 
@@ -3464,6 +3480,7 @@ MAIN PROC FAR
 	key_specify_action:               mov                   ah,1
 	                                  int                   16h
 	                                  jz                    key_specify_action                                                                      	;check if a key is pressed
+		
 
 	                                  mov                   ah,0
 	                                  int                   16h                                                                                     	;get the key
@@ -3535,7 +3552,7 @@ MAIN PROC FAR
 	                                  call                  DRAWE_PLAYER2
 	                                  call                  delay
 	                                 
-    ;-------------------------------- GAME MAIN LOOP (INFINITE LOOP UNTILL THE PLAYER PRESS F4)
+	;-------------------------------- GAME MAIN LOOP (INFINITE LOOP UNTILL THE PLAYER PRESS F4)
 	GameProcess:                      call                  CheckKeyPressed
 
 	;-------------------------------- check if the user pressed on F4
@@ -3551,17 +3568,7 @@ MAIN PROC FAR
 	;-------------------------------------------------------------------------
 
 	continue_game:                    
-	                                  call                  PlayerGravity
-	                                  call                  PlayerFall
-	                                  call                  REFREASH_SCREEN_PART
-	                                  call                  DRAWE_PLAYER1
-	                                  call                  DRAWE_PLAYER2
-	                                  call                  DrawingBall
-	                                  call                  delay
-	                                  call                  CheckBallCollisionWithScreen
-	                                  call                  CheckBallCollisionWithPlayers
-	                                  call                  UpdateBallPosition
-	                                  call                  CheckIfBallInsideNet
+	                                  call                  MainProcessOftTheGame
 	                                  jmp                   GameProcess
 
 
@@ -3569,11 +3576,282 @@ MAIN PROC FAR
 	                                  int                   21h
             
 MAIN ENDP
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;------------------------------------------------------DRAWING FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+	;description
+	;THIS PROCEDURE HANDLE THE GAME STATUS NIBBLE WHICH
+	;INDICATES IF A PLAYER SCORED OR WON
+	;a ->main player scored,b->other player scored,c ->main player won,d->other player won
+ApplyGameStatus PROC
+	
+	                                  test                  GameStatus,0001b
+	                                  JZ                    MainPlayerNoScore
+	;mainplayerscored
+	                                  inc                   player1_score
+	                                  call                  print_player1_score
+	                                  call                  GOOAL
+	                                  call                  FREAZE_FOR_GOAL
+	                                  call                  PutElementsInIntialPosition
+
+	;----------------------------------------------------------------------------------------------
+	MainPlayerNoScore:                
+	                                  test                  GameStatus,0010b
+	                                  JZ                    SecondryPlayerNoScore
+	;the other player scored
+		
+	                                  inc                   player2_score
+	                                  call                  print_player2_score
+	                                  call                  GOOAL
+	                                  call                  FREAZE_FOR_GOAL
+	                                  call                  PutElementsInIntialPosition
+	;----------------------------------------------------------------------------------------------
+
+	SecondryPlayerNoScore:            
+
+	                                  test                  GameStatus,0100b
+	                                  JZ                    MainPlayerNowon
+	;mainplayerwon
+	                                  call                  BackGround
+	                                  call                  DrawingBall
+	                                  Call                  drawGoalKeepers
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
+	                                  call                  DRAW_PLAYER1_WINS
+	                                  call                  delay
+	                                  call                  FREAZE_FOR_GOAL
+	                                  call                  PutElementsInIntialPosition
+	                                  call                  new_game
+	;----------------------------------------------------------------------------------------------
+
+	MainPlayerNowon:                  
+	                                  test                  GameStatus,1000b
+	                                  JZ                    SecondryPlayerNowon
+
+	;the other player won
+	                                  call                  BackGround
+	                                  call                  DrawingBall
+	                                  Call                  drawGoalKeepers
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
+	                                  call                  DRAW_PLAYER2_WINS
+	                                  call                  delay
+	                                  call                  FREAZE_FOR_GOAL
+	                                  call                  PutElementsInIntialPosition
+	                                  call                  new_game
+	;----------------------------------------------------------------------------------------------
+	
+	SecondryPlayerNowon:              
+
+	                                  ret
+ApplyGameStatus ENDP
+
+	;description
+	;THIS PROCEDURE CALLS THE MAIN PROCEFURE OF THE GAME
+MainProcessOftTheGame PROC
+	
+	                                  cmp                   IsMainUser,0
+	                                  JE                    NotMainUser_
+	;mainuser
+	                                  call                  PlayerGravity
+	                                  call                  PlayerFall
+	                                  call                  CheckBallCollisionWithScreen
+	                                  call                  CheckBallCollisionWithPlayers
+	                                  call                  UpdateBallPosition
+	                                  call                  CheckIfBallInsideNet
+	                                  call                  ApplyGameStatus
+	                                  call                  SendAndRecieveElementPosition
+	                                  call                  REFREASH_SCREEN_PART
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
+	                                  call                  DrawingBall
+	                                  call                  delay
+									   
+	                                  jmp                   ExitMainProcessOftTheGame
+
+	NotMainUser_:                     
+	;notmainuser
+	                                  call                  SendAndRecieveElementPosition
+	                                  call                  REFREASH_SCREEN_PART
+	                                  call                  DRAWE_PLAYER1
+	                                  call                  DRAWE_PLAYER2
+	                                  call                  DrawingBall
+	                                  call                  ApplyGameStatus
+	                                  call                  delay
+
+
+	ExitMainProcessOftTheGame:        
+	                                  ret
+MainProcessOftTheGame ENDP
+
+	;description
+	;HERE WE INTIALIZE THE UART DEVICE USING ITS
+	;REGISTERS
+IntializeUARTConfigurations PROC
+
+	;Set Divisor Latch Access Bit
+	                                  mov                   dx,3fbh                                                                                 	; Line Control Register
+	                                  mov                   al,10000000b                                                                            	;Set Divisor Latch Access Bit
+	                                  out                   dx,al                                                                                   	;Out it
+	;Set LSB byte of the Baud Rate Divisor Latch register.
+	                                  mov                   dx,3f8h
+	                                  mov                   al,0ch
+	                                  out                   dx,al
+	;Set MSB byte of the Baud Rate Divisor Latch register.
+	                                  mov                   dx,3f9h
+	                                  mov                   al,00h
+	                                  out                   dx,al
+	;Set port configuration
+	                                  mov                   dx,3fbh
+	                                  mov                   al,00011011b
+	; 0:Access to Receiver buffer, Transmitter buffer
+	; 0:Set Break disabled
+	;;;;;;;;;; 011:Even Parity
+	; 0:One Stop Bit
+	; 11:8bits
+	                                  out                   dx,al
+
+	                                  ret
+IntializeUARTConfigurations ENDP
+
+
+	;description
+	;procedure to send and recieve elements positions using uart
+SendAndRecieveElementPosition PROC
+
+	                                  cmp                   IsMainUser,0
+	                                  JE                    NotMainUser
+	;MainUser
+	;send player1 , ball positions and the status of the game (did any one score or won)
+	                                  mov                   Ax,Player1X
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   Ax, Player1Y
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   Ax,BallX
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   Ax, BallY
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   al,GameStatus
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+
+	;recieve player2 position
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   player2x,Ax
+
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   player2Y,AX
+
+	                                  jmp                   ExitSendAndRecieveElementPosition
+
+	NotMainUser:                      
+	;notMainUser
+	;recieve player1 ,ball positions and game status
+
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   player1x,Ax
+
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   player1Y,Ax
+									
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   BallX,Ax
+									
+	                                  call                  RecieveAxUsingUARTWithFeedBack
+	                                  mov                   BallY,Ax
+
+	                                  call                  RecieveAlUsingUART
+	                                  mov                   GameStatus,al
+	
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	;send player position
+	                                  mov                   Ax, Player2X
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   Ax, Player2Y
+	                                  call                  SendAxUsingUARTWithFeedBack
+
+	ExitSendAndRecieveElementPosition:
+	                                  ret
+SendAndRecieveElementPosition ENDP
+
+	;description
+	;HERE WE SEND 16 BIT USING ANOTHER PROCEDURE WHICH SEND 8 BIT
+	;IN ADDITION WE WAIT FOR A FEEDBACK FROM THE RECIEVER
+SendAxUsingUARTWithFeedBack proc
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  xchg                  al,ah
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  ret
+SendAxUsingUARTWithFeedBack endp
+
+	;description
+	;HERE WE RECIEVE 16 BIT USING ANOTHER PROCEDURE WHICH RECIEVE 8 BIT
+	;IN ADDITION WE SEND A FEEDBACK TO THE SENDER
+RecieveAxUsingUARTWithFeedBack proc
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  xchg                  al,ah
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  xchg                  ah,al
+	                                  ret
+RecieveAxUsingUARTWithFeedBack endp
+
+	;description
+	;sending byte in al using UART
+SendAlUsingUART PROC
+	;Check that Transmitter Holding Register is Empty
+	                                  mov                   bl,al
+	                                  mov                   dx,3FDH
+	Again_:                           in                    al,dX
+	                                  test                  al,00100000b
+	                                  jz                    Again_
+	;If empty put al in Transmit data register
+	                                  mov                   dx,3f8H
+	                                  mov                   al,bl
+	                                  out                   dx,al
+	                                  ret
+SendAlUsingUART ENDP
+
+	;description
+	;recieving byte in al using UART
+RecieveAlUsingUART PROC
+	;Check that data is recieved
+	                                  mov                   dx,3FDH
+	                                  mov                   bl,al
+	CHK:                              in                    al,dX
+	                                  test                  al,1
+	                                  jz                    CHK
+	;if ready put it in al
+	                                  mov                   dx,3f8H
+	                                  mov                   al,bl
+	                                  in                    al,dx
+	                                  ret
+RecieveAlUsingUART ENDP
+
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;------------------------------------------------------DRAWING FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 DRAW_START_LOGO PROC
@@ -3734,9 +4012,9 @@ DRAWE_PLAYER2 PROC
 	ENDING2:                          
 DRAWE_PLAYER2 ENDP
 
-;description
-;this procedure draws the ball pixels in the ball current position
-;using ballx and bally that indicate the ball x and y point
+	;description
+	;this procedure draws the ball pixels in the ball current position
+	;using ballx and bally that indicate the ball x and y point
 DrawingBall PROC
 	                                  mov                   dx,BallY
 	                                  mov                   cx,BallX
@@ -3946,14 +4224,14 @@ GOOAL PROC
 	                                  ret
 GOOAL ENDP
 
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------END DRAWING FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------END DRAWING FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-;DESCRIPTION
-;THIS FUNCTION TO DELAY AFTER DRAWING TO RENDER PIXELS
+	;DESCRIPTION
+	;THIS FUNCTION TO DELAY AFTER DRAWING TO RENDER PIXELS
 delay proc
 	                                  mov                   cx ,0
 	                                  mov                   dx ,0a120h
@@ -3961,7 +4239,7 @@ delay proc
 	                                  int                   15h
 	                                  ret
 delay ENdP
-; REFREASH SCREEN PART EVERY FRAME TO DRAW BALL AND PLAYERS IN THE NEW POSITION
+	; REFREASH SCREEN PART EVERY FRAME TO DRAW BALL AND PLAYERS IN THE NEW POSITION
 REFREASH_SCREEN_PART PROC
 
 	                                  mov                   di,196
@@ -3997,11 +4275,11 @@ REFREASH_SCREEN_PART PROC
 
 REFREASH_SCREEN_PART ENDP
 
-;DESCRIPTION 
-;THIS FUNCTION FOR CHECKING GRAVINTY OF PLAYER1 && PLAYER 2
-;THEN IF THE PLAYER 1 OR PLAYER 2 IS ABOVE THE CRAVITY LINE THEN WE SHOULD FALL IT DWON
-;WE ACTIVE FALLING PLAYER WITH PARAMETER FALL PLAYER STATUS WITH VALUE 1 IF HE NEEDS TO FALL
-;THEN WE CAN NOW NOW THAN PLAYER NEED TO FALL DOWN WITH PLAYER FALL STATUS
+	;DESCRIPTION
+	;THIS FUNCTION FOR CHECKING GRAVINTY OF PLAYER1 && PLAYER 2
+	;THEN IF THE PLAYER 1 OR PLAYER 2 IS ABOVE THE CRAVITY LINE THEN WE SHOULD FALL IT DWON
+	;WE ACTIVE FALLING PLAYER WITH PARAMETER FALL PLAYER STATUS WITH VALUE 1 IF HE NEEDS TO FALL
+	;THEN WE CAN NOW NOW THAN PLAYER NEED TO FALL DOWN WITH PLAYER FALL STATUS
 
 PlayerGravity proc near
 
@@ -4029,9 +4307,9 @@ PlayerGravity proc near
 	                                  ret
 PlayerGravity endp
 
-;DESCRIPTION
-;WE CHECK PLAYER FALL STATUS FOR EACH PLAYER 
-;IF PLAYER FALL STATUS EQUAL 1 THEN WE MAKE PLAYER DOWN EVERY FRAME UNTIL HE LAND LINE IN THE GROUD 
+	;DESCRIPTION
+	;WE CHECK PLAYER FALL STATUS FOR EACH PLAYER
+	;IF PLAYER FALL STATUS EQUAL 1 THEN WE MAKE PLAYER DOWN EVERY FRAME UNTIL HE LAND LINE IN THE GROUD
 
 PlayerFall proc    near
 	                                  mov                   ax,Player1FallStatus
@@ -4067,9 +4345,9 @@ PlayerFall proc    near
 	                                  ret
 PlayerFall endp
 
-;DESCRIPTION 
-;IN THIS FUNCTION WE CHECK KEYS PRESSED AND MOVE PLAYERS (UP - LEFT - RIGHT) DUE TO THE KEY PRESSED
-; AFTER WE GET THE PRESSED KEY WE SHIFT PLAYER COORDINATE  
+	;DESCRIPTION
+	;IN THIS FUNCTION WE CHECK KEYS PRESSED AND MOVE PLAYERS (UP - LEFT - RIGHT) DUE TO THE KEY PRESSED
+	; AFTER WE GET THE PRESSED KEY WE SHIFT PLAYER COORDINATE
 
 CheckKeyPressed PROC
 	                                  mov                   si,0                                                                                    	;if the user pressed on F4 during a game the SI register will hold -1 otherwise 0
@@ -4194,10 +4472,10 @@ CheckKeyPressed PROC
 CheckKeyPressed ENDP
 
 
-;DESCRIPTION
-;IN THIS FUNCTION WE CHECK BALL COLLISION WITH SCREEN EDGES
-;IF BALL HIT ANY EDGE IT DECREASE THE BALL SPEED IN BOTH DIRECTIONS
-;AND INVERT THE SPEED IN CERTAIN DIRECTION TO SIMULATE BALL PHYICS
+	;DESCRIPTION
+	;IN THIS FUNCTION WE CHECK BALL COLLISION WITH SCREEN EDGES
+	;IF BALL HIT ANY EDGE IT DECREASE THE BALL SPEED IN BOTH DIRECTIONS
+	;AND INVERT THE SPEED IN CERTAIN DIRECTION TO SIMULATE BALL PHYICS
 CheckBallCollisionWithScreen PROC
 
 
@@ -4247,10 +4525,10 @@ CheckBallCollisionWithScreen PROC
 
 CheckBallCollisionWithScreen ENDP
 
-;DESCRIPTION
-;IN THIS FUNCTION WE UPDATE BALL POSITION DUE TO PLAYER SHOOTING IT 
-;WE ALSO APPLY GRAVITY TO THE BALL AND MAKE SURE THAT THE BALL DOESN'T
-;CROSS THE BOUNDRIES
+	;DESCRIPTION
+	;IN THIS FUNCTION WE UPDATE BALL POSITION DUE TO PLAYER SHOOTING IT
+	;WE ALSO APPLY GRAVITY TO THE BALL AND MAKE SURE THAT THE BALL DOESN'T
+	;CROSS THE BOUNDRIES
 UpdateBallPosition PROC
 	;check if a player has hit the ball and still the ball is affected
 	NoAffectOfLastPlayerShoot:        
@@ -4325,9 +4603,9 @@ UpdatePlayer1Position PROC
 	                                  ret
 UpdatePlayer1Position ENDP
 
-;description
-;THIS PROCEDURE CHECK IF THE BALL COLLIDE WITH A PLAYER
-;AND INCREASE THE SPEED OF THE BALL IF IT HIT THE PLAYER
+	;description
+	;THIS PROCEDURE CHECK IF THE BALL COLLIDE WITH A PLAYER
+	;AND INCREASE THE SPEED OF THE BALL IF IT HIT THE PLAYER
 CheckBallCollisionWithPlayers PROC
 	;first check the x axis maxx1>minx2 && maxx2>minx1
 	                                  mov                   Ax,BallX
@@ -4590,15 +4868,17 @@ score_bar proc
 	                                  ret
 score_bar endp
 
-;description
-;HERE WE CHECK IF THE BALL IS INSIDE THE NET AND INCREASE
-;THE SCORE OF THE CROSSPONDING PLAYER
+	;description
+	;HERE WE CHECK IF THE BALL IS INSIDE THE NET AND INCREASE
+	;THE SCORE OF THE CROSSPONDING PLAYER
 CheckIfBallInsideNet PROC
 
+	;reset gamestatus
+	                                  mov                   GameStatus ,0
 	; check if ball inside the left net
 	                                  mov                   Ax,BallX
 	                                  add                   Ax,BallW
-	                                  mov                   Bx ,GoalKeeperLeftX
+	                                  mov                   Bx,GoalKeeperLeftX
 	                                  add                   Bx,GoalKeeperW
 	                                  cmp                   Ax,Bx
 	                                  JG                    BallIsnotInsideLeftNet
@@ -4607,28 +4887,12 @@ CheckIfBallInsideNet PROC
 	                                  cmp                   Ax,GoalKeeperLeftY
 	                                  JL                    BallIsnotInsideLeftNet
 
-	                                  inc                   player2_score
-	                                  call                  print_player2_score
-	                                  call                  GOOAL
-	                                  call                  FREAZE_FOR_GOAL
-	                                  cmp                   player2_score , MAX_GOAL_IN_level1
-	                                  je                    PLAYER2_WINNER
-	                                  call                  PutElementsInIntialPosition
-	                                  jmp                   BallIsnotInsideLeftNet
-
-	PLAYER2_WINNER:                   call                  BackGround
-	                                  call                  DrawingBall
-	                                  Call                  drawGoalKeepers
-	                                  call                  DRAWE_PLAYER1
-	                                  call                  DRAWE_PLAYER2
-	                                  call                  DRAW_PLAYER2_WINS
-	                                  call                  delay
-	                                  call                  FREAZE_FOR_GOAL
-	                                  call                  PutElementsInIntialPosition
-	                                  call                  new_game
-	                                  jmp                   BallIsnotInsideRightNet
-
-
+	                                  OR                    GameStatus,0010b
+	                                  mov                   Bl,MAX_GOAL_IN_level1
+	                                  dec                   Bl
+	                                  cmp                   player2_score , Bl
+	                                  jne                   BallIsnotInsideLeftNet
+	                                  OR                    GameStatus,1000b
 
 
 
@@ -4644,28 +4908,12 @@ CheckIfBallInsideNet PROC
 	                                  cmp                   Ax,GoalKeeperRightY
 	                                  JL                    BallIsnotInsideRightNet
 
-	                                  inc                   player1_score
-	                                  call                  print_player1_score
-	                                  call                  GOOAL
-	                                  call                  FREAZE_FOR_GOAL
-
-	                                  cmp                   player1_score, MAX_GOAL_IN_level1
-	                                  je                    PLAYER1_WINNER
-	                                  call                  PutElementsInIntialPosition
-	                                  jmp                   BallIsnotInsideRightNet
-
-
-	PLAYER1_WINNER:                   
-	                                  call                  BackGround
-	                                  call                  DrawingBall
-	                                  Call                  drawGoalKeepers
-	                                  call                  DRAWE_PLAYER1
-	                                  call                  DRAWE_PLAYER2
-	                                  call                  DRAW_PLAYER1_WINS
-	                                  call                  delay
-	                                  call                  FREAZE_FOR_GOAL
-	                                  call                  PutElementsInIntialPosition
-	                                  call                  new_game
+	                                  OR                    GameStatus,0001b
+	                                  mov                   Bl,MAX_GOAL_IN_level1
+	                                  dec                   Bl
+	                                  cmp                   player1_score , Bl
+	                                  jne                   BallIsnotInsideRightNet
+	                                  OR                    GameStatus,0100b
 
 	BallIsnotInsideRightNet:          
 	                                 
@@ -4673,8 +4921,8 @@ CheckIfBallInsideNet PROC
 	                                  ret
 CheckIfBallInsideNet ENDP
 
-;description
-;INTTIALIZE THE VARIABLES WE USE IN THE PROGRAM
+	;description
+	;INTTIALIZE THE VARIABLES WE USE IN THE PROGRAM
 PutElementsInIntialPosition PROC
 	                                  mov                   BallX,285
 	                                  mov                   BallY,160
