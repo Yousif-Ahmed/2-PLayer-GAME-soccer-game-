@@ -3570,6 +3570,9 @@ MAIN PROC FAR
 	continue_game:                    
 	                                  call                  MainProcessOftTheGame
 	                                  jmp                   GameProcess
+									  
+	;important whoever apply the invitation part
+	;not we still have to intialize IsMainUser according to the player who send the invitation
 
 
 	end_program:                      mov                   ah,4ch
@@ -3658,8 +3661,8 @@ MainProcessOftTheGame PROC
 	                                  call                  CheckBallCollisionWithPlayers
 	                                  call                  UpdateBallPosition
 	                                  call                  CheckIfBallInsideNet
-	                                  call                  ApplyGameStatus
 	                                  call                  SendAndRecieveElementPosition
+	                                  call                  ApplyGameStatus
 	                                  call                  REFREASH_SCREEN_PART
 	                                  call                  DRAWE_PLAYER1
 	                                  call                  DRAWE_PLAYER2
@@ -3670,12 +3673,14 @@ MainProcessOftTheGame PROC
 
 	NotMainUser_:                     
 	;notmainuser
+	                                  call                  PlayerGravity
+	                                  call                  PlayerFall
 	                                  call                  SendAndRecieveElementPosition
+	                                  call                  ApplyGameStatus
 	                                  call                  REFREASH_SCREEN_PART
 	                                  call                  DRAWE_PLAYER1
 	                                  call                  DRAWE_PLAYER2
 	                                  call                  DrawingBall
-	                                  call                  ApplyGameStatus
 	                                  call                  delay
 
 
@@ -3722,6 +3727,11 @@ SendAndRecieveElementPosition PROC
 	                                  JE                    NotMainUser
 	;MainUser
 	;send player1 , ball positions and the status of the game (did any one score or won)
+
+	;--------------------------------------------------------------------------------------------//WaitBeginSignal
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//WaitBeginSignal
+
 	                                  mov                   Ax,Player1X
 	                                  call                  SendAxUsingUARTWithFeedBack
 
@@ -3752,6 +3762,10 @@ SendAndRecieveElementPosition PROC
 	NotMainUser:                      
 	;notMainUser
 	;recieve player1 ,ball positions and game status
+	;--------------------------------------------------------------------------------------------//BeginSingal
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//BeginSignal
+
 
 	                                  call                  RecieveAxUsingUARTWithFeedBack
 	                                  mov                   player1x,Ax
