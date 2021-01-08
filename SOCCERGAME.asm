@@ -20,6 +20,32 @@ ENDM move_cursor
 
 ;__________________________________________________________________________________________________________________________________________
 
+get_cursor MACRO
+									  mov ah,3
+									  mov bh,0
+									  int 10h
+ENDM get_cursor
+
+;__________________________________________________________________________________________________________________________________________
+
+print_dashes MACRO y
+    local status_dashes
+    	                              mov     ah,2
+	                                  mov     bh,0                                                                                    	;page 0
+	                                  mov     dh,y                                                                                   	;Y=22
+	                                  mov     dl,-1
+	status_dashes:                    inc     dl                                                                                      	;start from X=0
+	                                  int     10h                                                                                     	;move cursor
+	                                  mov     bl,dl                                                                                   	;hold dl value temporarily because it will change
+	                                  mov     dl,'-'                                                                                  	;character to be printed
+	                                  int     21h                                                                                     	;print the char
+	                                  mov     dl,bl                                                                                   	;re-assign the value of dl again
+	                                  cmp     dl,79                                                                                   	;finish at X=79 'last column'
+	                                  jnz     status_dashes
+ENDM print_dashes
+
+
+;__________________________________________________________________________________________________________________________________________
 ;This macro prints the in-game line separators using the graphics mode from x to xf and from y to y+2
 print_game_separators MACRO x,y,xf
 LOCAL sep1, sep2
@@ -3562,6 +3588,15 @@ EXTRA_DATA2 SEGMENT
 	actual_size2          db               ?
 	username2             db               16 dup(?)                                                                                                                                                                                             	;speed gain due to player hitting a ball
 
+
+	x1                    db               5
+	y1                    db               1
+
+	x2                    db               5
+	y2                    db               13
+
+	sent_char             db               ?
+
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 
 	;UART used variables
@@ -3613,7 +3648,8 @@ MAIN PROC FAR
 	                                  jz                    play_game                                                                               	;if the key is F2
 
 	                                  cmp                   ah,3bh
-	                                  jz                    end_                                                                                    	;if the key is F1 (for chatting) 'This will be changed in the next phase'
+	                                  jnz                   key_specify_action                                                                      	;if the key is F1 (for chatting)
+	                                  call                  chatting_module
 
 	                                  jmp                   key_specify_action
 
@@ -3650,11 +3686,15 @@ MAIN PROC FAR
 	                                  int                   16h
 	                                  jz                    wait_key
 
+	                                  mov                   ah,0
+	                                  int                   16h
+									  
 	                                  CMP                   AL ,'1'
 	                                  JE                    SET_LEVEL1
 	                                  CMP                   AL , '2'
 	                                  JE                    SET_LEVEL2
-	                                  JNE                   wait_key
+	                                  jmp                   wait_key
+									                   
 	SET_LEVEL1:                       
 	                                  MOV                   LEVEL_STATUS ,1
 	                                  JMP                   AFTER_KEY
@@ -4936,19 +4976,7 @@ program_functionalities proc
 	                                  int                   21h
 
 	;-------------------------------- status bar dashes
-	                                  mov                   ah,2
-	                                  mov                   bh,0                                                                                    	;page 0
-	                                  mov                   dh,22                                                                                   	;Y=22
-
-	                                  mov                   dl,-1
-	status_dashes:                    inc                   dl                                                                                      	;start from X=0
-	                                  int                   10h                                                                                     	;move cursor
-	                                  mov                   bl,dl                                                                                   	;hold dl value temporarily because it will change
-	                                  mov                   dl,'-'                                                                                  	;character to be printed
-	                                  int                   21h                                                                                     	;print the char
-	                                  mov                   dl,bl                                                                                   	;re-assign the value of dl again
-	                                  cmp                   dl,79                                                                                   	;finish at X=79 'last column'
-	                                  jnz                   status_dashes
+	                                  print_dashes          22
 
 	                                  ret
 program_functionalities endp
@@ -5228,5 +5256,163 @@ FREAZE_FOR_GOAL PROC
 
 
 FREAZE_FOR_GOAL ENDP
+
+chatting_module proc
+	                                  clear_screen
+	                                  print_dashes          23
+	                                  print_dashes          11
+	                                  move_cursor           x1,y1
+	                                  call                  IntializeUARTConfigurations
+
+	main_loop:                        mov                   ah,1
+	                                  int                   16h
+	                                  jnz                   write_send
+
+	                                  mov                   dx,3fdh
+	                                  in                    al,dx
+	                                  test                  al,1
+	                                  jnz                   rec
+	                                  jmp                   main_loop
+
+
+
+	write_send:                       
+	                                  mov                   ah,0
+	                                  int                   16h
+
+
+	                                  cmp                   al,0
+	                                  jz                    scan_code
+	                                  mov                   sent_char,al
+	                                  jmp                   nextt
+	scan_code:                        cmp                   ah,3dh
+	                                  jz                    f3_key
+	                                  jmp                   main_loop
+	f3_key:                           mov                   sent_char,-1
+
+
+
+	nextt:                            mov                   dx,3fdh
+	ag:                               in                    al,dx
+	                                  test                  al,00100000b
+	                                  jz                    ag
+
+	                                  mov                   dx,3f8h
+	                                  mov                   al,sent_char
+	                                  out                   dx,al
+
+	                                  move_cursor           x1,y1
+
+	                                  cmp                   sent_char,-1
+	                                  jz                    finish_program
+
+	                                  cmp                   sent_char,0dh
+	                                  jz                    new_line
+
+	                                  cmp                   sent_char,08
+	                                  jz                    main_loop
+
+	print_char:                       get_cursor
+	                                  mov                   bl,dl
+	                                  mov                   dl,sent_char
+	                                  mov                   ah,2
+	                                  int                   21h
+	                                  cmp                   bl,79
+	                                  jz                    n1
+	                                  get_cursor
+	                                  mov                   x1,dl
+	                                  mov                   y1,dh
+	                                  jmp                   main_loop
+
+	rec:                              jmp                   write_recieve
+	m_loop:                           jmp                   main_loop
+
+	new_line:                         get_cursor
+
+
+
+	n1:                               cmp                   dh,10
+	                                  jnz                   next_line
+	                                  mov                   ah,6
+	                                  mov                   al,1
+	                                  mov                   bh,7
+	                                  mov                   cl,5
+	                                  mov                   ch,1
+	                                  mov                   dl,79
+	                                  mov                   dh,10
+	                                  int                   10h
+	                                  mov                   dh,9
+
+	next_line:                        mov                   ah,2
+	                                  mov                   bh,0
+	                                  mov                   dl,5
+	                                  inc                   dh
+	                                  int                   10h
+	                                  get_cursor
+	                                  mov                   x1,dl
+	                                  mov                   y1,dh
+	                                  jmp                   main_loop
+
+	finish_program:                   jmp                   en
+
+	;-----------------------------------
+	write_recieve:                    move_cursor           x2,y2
+	                                  mov                   dx,3f8h
+	                                  in                    al,dx
+
+	                                  cmp                   al,-1
+	                                  jz                    en
+
+	                                  cmp                   al,0dh
+	                                  jz                    new_line2
+
+	                                  cmp                   al,08
+	                                  jz                    m_loop
+
+
+	                                  get_cursor
+	                                  mov                   bl,dl
+	                                  mov                   dl,al
+	                                  mov                   ah,2
+	                                  int                   21h
+	                                  cmp                   bl,79
+	                                  jz                    n2
+	                                  get_cursor
+	                                  mov                   x2,dl
+	                                  mov                   y2,dh
+	                                  jmp                   main_loop
+
+
+
+	new_line2:                        get_cursor
+
+
+	n2:                               cmp                   dh,22
+	                                  jnz                   next_line2
+	                                  mov                   ah,6
+	                                  mov                   al,1
+	                                  mov                   bh,7
+	                                  mov                   cl,5
+	                                  mov                   ch,13
+	                                  mov                   dl,79
+	                                  mov                   dh,22
+	                                  int                   10h
+	                                  mov                   dh,21
+
+	next_line2:                       mov                   ah,2
+	                                  mov                   bh,0
+	                                  mov                   dl,5
+	                                  inc                   dh
+	                                  int                   10h
+	                                  get_cursor
+	                                  mov                   x2,dl
+	                                  mov                   y2,dh
+	                                  jmp                   main_loop
+
+	en:                               call                  program_functionalities
+	                                  ret
+
+chatting_module endp
+
 
 END MAIN
