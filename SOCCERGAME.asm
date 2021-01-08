@@ -3589,11 +3589,11 @@ EXTRA_DATA2 SEGMENT
 	username2             db               16 dup(?)                                                                                                                                                                                             	;speed gain due to player hitting a ball
 
 
-	x1                    db               5
-	y1                    db               1
+	x1                    db               ?
+	y1                    db               ?
 
-	x2                    db               5
-	y2                    db               13
+	x2                    db               ?
+	y2                    db               ?
 
 	sent_char             db               ?
 
@@ -5258,11 +5258,16 @@ FREAZE_FOR_GOAL PROC
 FREAZE_FOR_GOAL ENDP
 
 chatting_module proc
+
+	                                  mov                   x1,5
+	                                  mov                   x2,5
+	                                  mov                   y1,1
+	                                  mov                   y2,13
 	                                  clear_screen
 	                                  print_dashes          23
 	                                  print_dashes          11
 	                                  move_cursor           x1,y1
-	                                  call                  IntializeUARTConfigurations
+	                                  
 
 	main_loop:                        mov                   ah,1
 	                                  int                   16h
@@ -5409,7 +5414,8 @@ chatting_module proc
 	                                  mov                   y2,dh
 	                                  jmp                   main_loop
 
-	en:                               call                  program_functionalities
+	en:                               clear_screen
+	                                  call                  program_functionalities
 	                                  ret
 
 chatting_module endp
