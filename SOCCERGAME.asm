@@ -3558,7 +3558,7 @@ EXTRA_DATA2 SEGMENT
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;VARIABLES FOR LEVELS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	LEVEL_STATUS                  DW               ?
+	LEVEL_STATUS                  DB               ?
 
 	player2W                      DW               ?
 	player2H                      DW               ?
@@ -3620,17 +3620,7 @@ EXTRA_DATA2 SEGMENT
 
 	LEVEL_MESSAGE                 db               'For Level 1 Press 1 ||  For level 2 Press 2','$'
 
-	Chat_Rec_inv                  db               '   Sent you a chat invitation','$'
-
-	Chat_sent_inv                 db               'you sent a chat invitation','$'
-
-	game_Rec_inv                  db               '   Sent you a Game invitation','$'
-
-	game_sent_inv                 db               'you sent a game invitation','$'
-
 	
-	
-
 	                              username1_buffer label byte
 	max_size1                     db               16
 	actual_size1                  db               ?
@@ -3665,11 +3655,15 @@ EXTRA_DATA2 SEGMENT
 	;	RecievedStatus        db               ?                                                                                                                                                                                                     	;represent game status 0000 dcba   a , b ,c &d are LST nibble
 	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,
 	;	SendStatus            db               ?
-	
+	;Levels messages
+	Level1_message                db               "YOUR FRIEND CHOSE |LEVEL 1" , "$"
+	Level2_message                db               "YOUR FRIEND CHOSE |LEVEL 2" , "$"
+
 	;notification variables
 	notifi_recievedgameinvitation db               "Recieved Game Invitation press f2 to accept esc to cancel","$"
 	notifi_recievedchatinvitation db               "Recieved chat Invitation press f1 to accept esc to cancel","$"
 	notifi_sentinvitation         db               "Invitation Sent waiting for respond to cancel press esc","$"
+	
 	
 	;inline chat variables
 	x1_ingame                     db               ?
@@ -3792,6 +3786,8 @@ MAIN PROC FAR
 	                                  assume                DS:@DATA
 
 	;-------------------------------- print 'PRESS 1 FOR LEVEL 1 OR PRESS 2 FOR LEVEL 2'
+	                                  cmp                   IsMainUser ,1
+	                                  jnz                   recieve_level
 	                                  move_cursor           12h, 18h
 	                                  mov                   dx,offset LEVEL_MESSAGE
 	                                  mov                   ah,9
@@ -3810,12 +3806,56 @@ MAIN PROC FAR
 	                                  CMP                   AL , '2'
 	                                  JE                    SET_LEVEL2
 	                                  jmp                   wait_key
+
+	recieve_level:                    
+	                                  call                  RecieveAlUsingUART
+	                                  cmp                   al ,1
+	                                  jz                    Recieve_level1
+	                                  cmp                   al ,2
+	                                  jz                    Recieve_level2
+
+	Recieve_level1:                   
+	                                  mov                   LEVEL_STATUS ,al
+
+	                                  move_cursor           26 ,23
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset Level1_message
+	                                  int                   21h
+
+                                      move_cursor           27 ,24
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset load_screen_str
+	                                  int                   21h
+									  
+	                                  jmp                   AFTER_KEY
+	                                  
+
+	Recieve_level2:                   mov                   LEVEL_STATUS,al
+	 
+	                                  move_cursor           26 ,17
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset Level2_message
+	                                  int                   21h
+
+									  move_cursor           27 ,18
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset load_screen_str
+	                                  int                   21h
+
+	                                  jmp                   AFTER_KEY
+									  
+									  
 									                   
 	SET_LEVEL1:                       
 	                                  MOV                   LEVEL_STATUS ,1
+	                                  mov                   al ,LEVEL_STATUS
+	                                  call                  SendAlUsingUART
 	                                  JMP                   AFTER_KEY
 	SET_LEVEL2:                       
 	                                  MOV                   LEVEL_STATUS,2
+	                                  mov                   al ,LEVEL_STATUS
+	                                  call                  SendAlUsingUART
+
 
 	AFTER_KEY:                        
 	;-------------------------------- get the key because if the user pressed on F4, the game will not exit
