@@ -1,4 +1,59 @@
 ;________________________________________________________MACROS___________________________________________________________________________
+clear_first_line MACRO x
+LOCAL L1
+
+										move_cursor x,20
+										mov cx,38
+										mov dl,' '
+										mov ah,2 
+										L1: int 21h
+										LOOP L1
+
+ENDM clear_first_line
+
+;________________________________________________________________________________________________________________________________________
+
+scroll_up MACRO x, y, xf, yf
+LOCAL a1
+
+										mov bh,0
+										mov cl,x
+										mov ch,y
+
+										a1: mov dl,cl
+										mov dh,ch
+										int 10h
+
+										mov ah,8
+										int 10h
+										mov bl,al 
+
+										mov ah,2
+										mov dl,' '
+										int 21h
+
+										mov dl,cl
+										mov dh,ch
+										dec dh 
+										int 10h
+
+										mov dl,bl 
+										int 21h
+
+										inc cl
+										cmp cl,xf
+										jbe a1
+
+										mov cl,x
+										inc ch
+										cmp ch,yf
+										jbe a1
+
+ENDM scroll_up
+
+
+;________________________________________________________________________________________________________________________________________
+
 
 clear_screen MACRO
 									  mov ax,0600h
@@ -3617,6 +3672,12 @@ EXTRA_DATA2 SEGMENT
 	notifi_recievedgameinvitation db               "Recieved Game Invitation press f2 to accept esc to cancel","$"
 	notifi_recievedchatinvitation db               "Recieved chat Invitation press f1 to accept esc to cancel","$"
 	notifi_sentinvitation         db               "Invitation Sent waiting for respond to cancel press esc","$"
+	
+	;inline chat variables
+	x1_ingame                     db               ?
+	y1_ingame                     db               ?
+	x2_ingame                     db               ?
+	y2_ingame                     db               ?
 
 
 .CODE
@@ -3871,6 +3932,161 @@ MAIN PROC FAR
             
 MAIN ENDP
 
+	;this function hadles the chat inside the game
+in_game_chatting proc
+
+
+	                                  mov                   x1_ingame,1
+	                                  mov                   y1_ingame,20
+	                                  mov                   x2_ingame,41
+	                                  mov                   y2_ingame,20
+
+	                                  move_cursor           x1_ingame,y1_ingame
+
+
+	main_loop_ig:                     mov                   ah,1
+	                                  int                   16h
+	                                  jnz                   write_send_ig
+
+	                                  mov                   dx,3fdh
+	                                  in                    al,dx
+	                                  test                  al,1
+	                                  jnz                   rec_ig
+	                                  jmp                   main_loop_ig
+
+
+
+	write_send_ig:                    
+	                                  mov                   ah,0
+	                                  int                   16h
+
+
+	                                  cmp                   al,0
+	                                  jz                    scan_code_ig
+	                                  mov                   sent_char,al
+	                                  jmp                   next_ig
+	scan_code_ig:                     cmp                   ah,3dh
+	                                  jz                    f3_key_ig
+	                                  jmp                   main_loop_ig
+	f3_key_ig:                        mov                   sent_char,-1
+
+
+
+	next_ig:                          mov                   dx,3fdh
+	again_ig:                         in                    al,dx
+	                                  test                  al,00100000b
+	                                  jz                    again_ig
+
+	                                  mov                   dx,3f8h
+	                                  mov                   al,sent_char
+	                                  out                   dx,al
+
+	                                  move_cursor           x1_ingame,y1_ingame
+
+	                                  cmp                   sent_char,-1
+	                                  jz                    f_ig
+
+	                                  cmp                   sent_char,0dh
+	                                  jz                    new_line_ig
+
+	                                  cmp                   sent_char,08
+	                                  jz                    main_loop_ig
+
+	print_char_ig:                    get_cursor
+	                                  mov                   bl,dl
+	                                  mov                   dl,sent_char
+	                                  mov                   ah,2
+	                                  int                   21h
+	                                  cmp                   bl,38
+	                                  jz                    n1_ig
+	                                  get_cursor
+	                                  mov                   x1_ingame,dl
+	                                  mov                   y1_ingame,dh
+	                                  jmp                   main_loop_ig
+
+	rec_ig:                           jmp                   write_recieve_ig
+	m_loop_ig:                        jmp                   main_loop_ig
+	f_ig:                             jmp                   finish_chatting
+	new_line_ig:                      get_cursor
+
+
+
+	n1_ig:                            cmp                   dh,22
+	                                  jnz                   next_line_ig
+								
+	                                  clear_first_line      1
+	                                  scroll_up             1,21,38,22
+	                                  mov                   dh,21
+
+	next_line_ig:                     mov                   ah,2
+	                                  mov                   bh,0
+	                                  mov                   dl,1
+	                                  inc                   dh
+	                                  int                   10h
+	                                  get_cursor
+	                                  mov                   x1_ingame,dl
+	                                  mov                   y1_ingame,dh
+	                                  jmp                   main_loop_ig
+
+	finish_chatting:                  jmp                   end_chatting
+	m_loop2_ig:                       jmp                   m_loop_ig
+
+
+
+	write_recieve_ig:                 move_cursor           x2_ingame,y2_ingame
+	                                  mov                   dx,3f8h
+	                                  in                    al,dx
+
+	                                  cmp                   al,-1
+	                                  jz                    end_chatting
+
+	                                  cmp                   al,0dh
+	                                  jz                    new_line2_ig
+
+	                                  cmp                   al,08
+	                                  jz                    m_loop2_ig
+
+
+	                                  get_cursor
+	                                  mov                   bl,dl
+	                                  mov                   dl,al
+	                                  mov                   ah,2
+	                                  int                   21h
+	                                  cmp                   bl,78
+	                                  jz                    n2_ig
+	                                  get_cursor
+	                                  mov                   x2_ingame,dl
+	                                  mov                   y2_ingame,dh
+	                                  jmp                   main_loop_ig
+	end_chatting:                     jmp                   end_chatting1
+
+
+	new_line2_ig:                     get_cursor
+
+
+	n2_ig:                            cmp                   dh,22
+	                                  jnz                   next_line2_ig
+								
+	                                  clear_first_line      41
+	                                  scroll_up             41,21,79,22
+	                                  mov                   dh,21
+
+	next_line2_ig:                    mov                   ah,2
+	                                  mov                   bh,0
+	                                  mov                   dl,41
+	                                  inc                   dh
+	                                  int                   10h
+	                                  get_cursor
+	                                  mov                   x2_ingame,dl
+	                                  mov                   y2_ingame,dh
+	                                  jmp                   main_loop_ig
+
+
+	end_chatting1:                    ret
+
+
+in_game_chatting endp
+
 	;description
 	;swaps the two username 1 & 2 if the current player isn't the man user
 	;in order to print then in the correct place
@@ -4076,7 +4292,7 @@ CheckRecievedInvitation PROC
 	                                  jz                    ExitCheckRecievedInvitation
 	                                  mov                   al,0
 	ExitCheckRecievedInvitation:      
-
+	                                  mov                   IsMainUser,0
 	                                  ret
 CheckRecievedInvitation ENDP
 
@@ -4967,6 +5183,11 @@ CheckKeyPressed PROC
 	                                  jnz                   Exit                                                                                	;F4 key
 	                                  mov                   si, -1                                                                              	;to indicate that the game will exit
 	;--------------------------------------------------------
+	;-------------------------------- this is for check inline chat
+	                                  cmp                   ah,3dh
+	                                  jnz                   Exit
+	                                  call                  in_game_chatting
+	;--------------------------------------------------------
 	                                  JMP                   ExitCheckKeyPressed
 	Bridge1:                          jmp                   ReadKey
 
@@ -5531,7 +5752,7 @@ PutElementsInIntialPosition ENDP
 
 new_game proc
 	;------------------------------------ This proc initializes the parameters of the game after ending the game
-	                                  mov                   IsMainUser,0
+	;mov                   IsMainUser,0
 
 	                                  mov                   player1_score,0
 	                                  mov                   player2_score,0
