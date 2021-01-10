@@ -3619,7 +3619,10 @@ EXTRA_DATA2 SEGMENT
 
 	LEVEL_MESSAGE                 db               'For Level 1 Press 1 ||  For level 2 Press 2','$'
 
-	
+	end_chatting_message1         db               'To end chatting with ','$'
+
+	end_chatting_message2         db               ' Press F3','$'
+
 	                              username1_buffer label byte
 	max_size1                     db               16
 	actual_size1                  db               ?
@@ -3821,7 +3824,7 @@ MAIN PROC FAR
 	                                  mov                   dx , offset Level1_message
 	                                  int                   21h
 
-                                      move_cursor           27 ,24
+	                                  move_cursor           27 ,24
 	                                  mov                   ah ,9
 	                                  mov                   dx , offset load_screen_str
 	                                  int                   21h
@@ -3836,7 +3839,7 @@ MAIN PROC FAR
 	                                  mov                   dx , offset Level2_message
 	                                  int                   21h
 
-									  move_cursor           27 ,18
+	                                  move_cursor           27 ,18
 	                                  mov                   ah ,9
 	                                  mov                   dx , offset load_screen_str
 	                                  int                   21h
@@ -5715,7 +5718,7 @@ score_bar proc
 	                                  score_bar_separators  319,280,305
 	                                  score_bar_separators  342,280,305
 	                                  score_bar_separators  496,280,305
-									  score_bar_separators 319,310,377
+	                                  score_bar_separators  319,310,377
 	                                  ret
 score_bar endp
 
@@ -5869,17 +5872,28 @@ FREAZE_FOR_GOAL PROC
 FREAZE_FOR_GOAL ENDP
 
 chatting_module proc
+	                                  clear_screen
 
-	                             
+	                                  move_cursor           0,24
+	                                  mov                   ah,9
+
+	                                  mov                   dx,offset end_chatting_message1
+	                                  int                   21h
+
+	                                  mov                   dx,offset username2
+	                                  int                   21h
+
+	                                  mov                   dx,offset end_chatting_message2
+	                                  int                   21h
 
 	                                  mov                   x1,5
 	                                  mov                   x2,5
 	                                  mov                   y1,1
 	                                  mov                   y2,13
-	                                  clear_screen
+
 	                                  
 	                                  move_cursor           0 ,0
-	                                  mov                   ah ,9
+	                                  mov                   ah,9
 	                                  mov                   dx , offset username1
 	                                  int                   21h
 
