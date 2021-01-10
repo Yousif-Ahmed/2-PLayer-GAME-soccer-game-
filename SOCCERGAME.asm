@@ -1,4 +1,7 @@
 ;________________________________________________________MACROS___________________________________________________________________________
+
+;This macro clears the screen from (x,20) to (x+37,Y), It is used in in-game chatting module to clear the first line and then scroll the messages
+
 clear_first_line MACRO x
 LOCAL L1
 
@@ -13,6 +16,7 @@ ENDM clear_first_line
 
 ;________________________________________________________________________________________________________________________________________
 
+;This macro is used to scroll up messages in graphics mode
 scroll_up MACRO x, y, xf, yf
 LOCAL a1
 
@@ -20,30 +24,37 @@ LOCAL a1
 	                                  mov                   cl,x
 	                                  mov                   ch,y
 
+	;-------------------------------- move cusor to (x,y)
 	a1:                               mov                   dl,cl
 	                                  mov                   dh,ch
 	                                  int                   10h
 
+	;-------------------------------- read the character at cursor position
 	                                  mov                   ah,8
 	                                  int                   10h
 	                                  mov                   bl,al
 
+	;-------------------------------- print ' ' instead of the character
 	                                  mov                   ah,2
 	                                  mov                   dl,' '
 	                                  int                   21h
 
+	;-------------------------------- move cursor to (x,y-1) to print the char at the place which is directly above it
 	                                  mov                   dl,cl
 	                                  mov                   dh,ch
 	                                  dec                   dh
 	                                  int                   10h
 
+	;-------------------------------- print the character
 	                                  mov                   dl,bl
 	                                  int                   21h
 
+	;-------------------------------- increment x then check if the first line is finished or not
 	                                  inc                   cl
 	                                  cmp                   cl,xf
 	                                  jbe                   a1
 
+	;-------------------------------- start at X=x, Y=y+1 to scroll the next line
 	                                  mov                   cl,x
 	                                  inc                   ch
 	                                  cmp                   ch,yf
@@ -4005,11 +4016,11 @@ MAIN PROC FAR
             
 MAIN ENDP
 
-	;this function hadles the chat inside the game
+
 in_game_chatting proc
 
 	;-------------------------------- print the strings of the status bar
-									  clear_last_line
+	                                  clear_last_line
 
 	                                  move_cursor           0,24
 	                                  mov                   ah,9
@@ -4038,6 +4049,7 @@ in_game_chatting proc
 	                                  jmp                   main_loop_ig
 
 
+	;-------------------------------- the current user sent a character
 	;-------------------------------- read the key
 	write_send_ig:                    
 	                                  mov                   ah,0
@@ -4046,41 +4058,53 @@ in_game_chatting proc
 	;-------------------------------- check if the character is non printable to send its scan code
 	                                  cmp                   al,0
 	                                  jz                    scan_code_ig
-									  
+
+	;-------------------------------- the character is printable
 	                                  mov                   sent_char,al
 	                                  jmp                   next_ig
+
+	;-------------------------------- check if the key is F3
 	scan_code_ig:                     cmp                   ah,3dh
 	                                  jz                    f3_key_ig
 	                                  jmp                   main_loop_ig
 	f3_key_ig:                        mov                   sent_char,-1
 
 
-
+	;-------------------------------- check if the holding register is empty
 	next_ig:                          mov                   dx,3fdh
 	again_ig:                         in                    al,dx
 	                                  test                  al,00100000b
 	                                  jz                    again_ig
 
+	;-------------------------------- send the character
 	                                  mov                   dx,3f8h
 	                                  mov                   al,sent_char
 	                                  out                   dx,al
 
 	                                  move_cursor           x1_ingame,y1_ingame
 
+	;-------------------------------- the key is F3
 	                                  cmp                   sent_char,-1
 	                                  jz                    f_ig
 
+	;-------------------------------- the key is enter
 	                                  cmp                   sent_char,0dh
 	                                  jz                    new_line_ig
 
+	;-------------------------------- the key is backspace then return to the main loop
 	                                  cmp                   sent_char,08
 	                                  jz                    main_loop_ig
 
+
 	print_char_ig:                    get_cursor
 	                                  mov                   bl,dl
+
+	;-------------------------------- print the character
 	                                  mov                   dl,sent_char
 	                                  mov                   ah,2
 	                                  int                   21h
+
+	;-------------------------------- check if the cursor is at the last column to start in a new line
 	                                  cmp                   bl,38
 	                                  jz                    n1_ig
 	                                  get_cursor
@@ -4088,17 +4112,21 @@ in_game_chatting proc
 	                                  mov                   y1_ingame,dh
 	                                  jmp                   main_loop_ig
 
+	;-------------------------------- far jump
 	rec_ig:                           jmp                   write_recieve_ig
 	m_loop_ig:                        jmp                   main_loop_ig
 	f_ig:                             jmp                   finish_chatting
+
+
 	new_line_ig:                      get_cursor
 
-
-
+	;-------------------------------- check if the cursor is at the last line
 	n1_ig:                            cmp                   dh,22
 	                                  jnz                   next_line_ig
-								
-	                                  clear_first_line      1
+	
+	                                  clear_first_line      1                                                                                   	;start from x = 1
+
+	;-------------------------------- scroll the screen upwards
 	                                  scroll_up             1,21,38,22
 	                                  mov                   dh,21
 
@@ -4116,61 +4144,77 @@ in_game_chatting proc
 	m_loop2_ig:                       jmp                   m_loop_ig
 
 
+	;-------------------------------- the current user recieved a character
+	;-------------------------------- read the character
 	write_recieve_ig:                 move_cursor           x2_ingame,y2_ingame
 	                                  mov                   dx,3f8h
 	                                  in                    al,dx
 
+	;-------------------------------- the key is F3
 	                                  cmp                   al,-1
 	                                  jz                    end_chatting
 
+	;-------------------------------- the key is enter
 	                                  cmp                   al,0dh
 	                                  jz                    new_line2_ig
 
+	;-------------------------------- the key is backspace
 	                                  cmp                   al,08
 	                                  jz                    m_loop2_ig
 
 
 	                                  get_cursor
 	                                  mov                   bl,dl
+
+	;-------------------------------- print the character
 	                                  mov                   dl,al
 	                                  mov                   ah,2
 	                                  int                   21h
+
+	;-------------------------------- check if the cursor is at the last column
 	                                  cmp                   bl,78
 	                                  jz                    n2_ig
 	                                  get_cursor
 	                                  mov                   x2_ingame,dl
 	                                  mov                   y2_ingame,dh
 	                                  jmp                   main_loop_ig
+
+	;-------------------------------- far jump
 	end_chatting:                     jmp                   end_chatting1
 
 
 	new_line2_ig:                     get_cursor
 
 
+	;--------------------------------- check if the cursor is at the last row
 	n2_ig:                            cmp                   dh,22
 	                                  jnz                   next_line2_ig
 								
 	                                  clear_first_line      41
+
+	;-------------------------------- scroll up the screen
 	                                  scroll_up             41,21,79,22
 	                                  mov                   dh,21
 
+	;-------------------------------- new line
 	next_line2_ig:                    mov                   ah,2
 	                                  mov                   bh,0
 	                                  mov                   dl,41
 	                                  inc                   dh
 	                                  int                   10h
 	                                  get_cursor
-	                                  mov                   x2_ingame,dl
+	                                  mov                   x2_ingame,dl                                                                        	;save the cursor values
 	                                  mov                   y2_ingame,dh
 	                                  jmp                   main_loop_ig
 
 
 	end_chatting1:                    
 	                                  And                   GameStatus2,01b
+
 	                                  clear_last_line
 	                                  move_cursor           0,24
 
-	;-------------------------------- print the end game string
+	;-------------------------------- print the end game string and the start in-game chat string at the status bar after the in-game chatting is ended
 	                                  mov                   dx,offset end_game_str
 	                                  mov                   ah,9
 	                                  int                   21h
@@ -4179,7 +4223,6 @@ in_game_chatting proc
 	                                  int                   21h
 
 	                                  ret
-
 
 in_game_chatting endp
 
@@ -5990,7 +6033,7 @@ chatting_module proc
 									  
 	                                  jmp                   main_loop
 
-
+	;-------------------------------- the current user sent a character
 	;-------------------------------- get the pressed key
 	write_send:                       
 	                                  mov                   ah,0
@@ -6081,6 +6124,8 @@ chatting_module proc
 
 	finish_program:                   jmp                   en
 
+
+	;-------------------------------- the current user recieved a character
 	;-------------------------------- get the recieved character
 	write_recieve:                    move_cursor           x2,y2
 	                                  mov                   dx,3f8h
