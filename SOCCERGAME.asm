@@ -54,6 +54,18 @@ ENDM scroll_up
 
 ;________________________________________________________________________________________________________________________________________
 
+clear_last_line MACRO
+LOCAL l 
+move_cursor 0,24
+mov cx,80
+mov dl,' '
+mov ah,2 
+l: int 21h
+LOOP l
+
+ENDM clear_last_line
+
+;________________________________________________________________________________________________________________________________________
 
 clear_screen MACRO
 									  mov ax,0600h
@@ -3613,7 +3625,11 @@ EXTRA_DATA2 SEGMENT
 
 	exit_program_message          db               '*To end the program, press ESC', '$'
 
-	end_game_str                  db               'To end the game, Press F4','$'
+	end_game_str                  db               'To end the game, Press F4 | ','$'
+
+	start_ingame_chatting_str     db               'To start in-game chatting, Press F3','$'
+
+	end_ingame_chatting_str       db               'To end in-game chatting, Press F3','$'
 
 	load_screen_str               db               'Press any key to continue','$'
 
@@ -3974,7 +3990,12 @@ MAIN ENDP
 
 	;this function hadles the chat inside the game
 in_game_chatting proc
+	                                  clear_last_line
 
+	                                  move_cursor           0,24
+	                                  mov                   ah,9
+	                                  mov                   dx,offset end_ingame_chatting_str
+	                                  int                   21h
 
 	                                  mov                   x1_ingame,1
 	                                  mov                   y1_ingame,20
@@ -4124,6 +4145,17 @@ in_game_chatting proc
 
 	end_chatting1:                    
 	                                  And                   GameStatus2,01b
+	                                  clear_last_line
+	                                  move_cursor           0,24
+
+	;-------------------------------- print the end game string
+	                                  mov                   dx,offset end_game_str
+	                                  mov                   ah,9
+	                                  int                   21h
+									  
+	                                  mov                   dx, offset start_ingame_chatting_str
+	                                  int                   21h
+
 	                                  ret
 
 
@@ -5664,6 +5696,9 @@ print_game_strings proc
 	;-------------------------------- print the end game string
 	                                  mov                   dx,offset end_game_str
 	                                  mov                   ah,9
+	                                  int                   21h
+									  
+	                                  mov                   dx, offset start_ingame_chatting_str
 	                                  int                   21h
 
 	                                  ret
