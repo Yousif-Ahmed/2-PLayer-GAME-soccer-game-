@@ -126,17 +126,17 @@ ENDM print_game_separators
 ;_________________________________________________________________________________________________________________________________________
 
 ;This macro prints the vertical lines of the score bar of the game
-score_bar_separators MACRO x, y
+score_bar_separators MACRO x, y, yf
 LOCAL score_bar1,score_bar2
 									 
-									  mov 		   ah,0ch                  ;the draw pixel mode of int 10h
+									 mov 		   ah,0ch                  ;the draw pixel mode of int 10h
 									  mov 		   bh,0                    ;page 0
 									  mov  		   al,0bh                  ;color (light cyan)
 									  mov 		   cx,x                    ;start at X=x
 									  mov 		   di,cx				   
 									  add 		   di,2                    ;finish at X=x+2
-									  mov 		   si,y 
-									  add 		   si,25                   ;finish at Y=y+25 at X=x and X=x+1
+									  mov 		   si,yf 				   ;finish at Y=y+yf at X=x and X=x+1
+									                   
 
     score_bar1:						  mov 		   dx,y                    ;start at Y=y
     score_bar2:						  int 		   10h
@@ -146,7 +146,6 @@ LOCAL score_bar1,score_bar2
 									  inc 		   cx
 									  cmp 		   cx,di
 									  jnz 		   score_bar1
-
 ENDM score_bar_separators 
 
 ;______________________________________________________________________________________________________________________________________________
@@ -5711,12 +5710,12 @@ score_bar proc
 	                                  print_game_separators 144,280,496
 	                                  print_game_separators 0,380,640
 
-	                                  score_bar_separators  144,280
-	                                  score_bar_separators  295,280
-	                                  score_bar_separators  319,280
-	                                  score_bar_separators  342,280
-	                                  score_bar_separators  496,280
-									  
+	                                  score_bar_separators  144,280,305
+	                                  score_bar_separators  295,280,305
+	                                  score_bar_separators  319,280,305
+	                                  score_bar_separators  342,280,305
+	                                  score_bar_separators  496,280,305
+									  score_bar_separators 319,310,377
 	                                  ret
 score_bar endp
 
