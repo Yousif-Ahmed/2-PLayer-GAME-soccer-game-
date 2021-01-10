@@ -2,12 +2,12 @@
 clear_first_line MACRO x
 LOCAL L1
 
-										move_cursor x,20
-										mov cx,38
-										mov dl,' '
-										mov ah,2 
-										L1: int 21h
-										LOOP L1
+	                                  move_cursor           x,20
+	                                  mov                   cx,38
+	                                  mov                   dl,' '
+	                                  mov                   ah,2
+	L1:                               int                   21h
+	                                  LOOP                  L1
 
 ENDM clear_first_line
 
@@ -16,38 +16,38 @@ ENDM clear_first_line
 scroll_up MACRO x, y, xf, yf
 LOCAL a1
 
-										mov bh,0
-										mov cl,x
-										mov ch,y
+									  mov                   bh,0
+	                                  mov                   cl,x
+	                                  mov                   ch,y
 
-										a1: mov dl,cl
-										mov dh,ch
-										int 10h
+	a1:                               mov                   dl,cl
+	                                  mov                   dh,ch
+	                                  int                   10h
 
-										mov ah,8
-										int 10h
-										mov bl,al 
+	                                  mov                   ah,8
+	                                  int                   10h
+	                                  mov                   bl,al
 
-										mov ah,2
-										mov dl,' '
-										int 21h
+	                                  mov                   ah,2
+	                                  mov                   dl,' '
+	                                  int                   21h
 
-										mov dl,cl
-										mov dh,ch
-										dec dh 
-										int 10h
+	                                  mov                   dl,cl
+	                                  mov                   dh,ch
+	                                  dec                   dh
+	                                  int                   10h
 
-										mov dl,bl 
-										int 21h
+	                                  mov                   dl,bl
+	                                  int                   21h
 
-										inc cl
-										cmp cl,xf
-										jbe a1
+	                                  inc                   cl
+	                                  cmp                   cl,xf
+	                                  jbe                   a1
 
-										mov cl,x
-										inc ch
-										cmp ch,yf
-										jbe a1
+	                                  mov                   cl,x
+	                                  inc                   ch
+	                                  cmp                   ch,yf
+	                                  jbe                   a1
 
 ENDM scroll_up
 
@@ -56,33 +56,36 @@ ENDM scroll_up
 
 clear_last_line MACRO
 LOCAL l 
-move_cursor 0,24
-mov cx,80
-mov dl,' '
-mov ah,2 
-l: int 21h
-LOOP l
+
+	                                  move_cursor           0,24
+	                                  mov                   cx,80
+	                                  mov                   dl,' '
+	                                  mov                   ah,2
+	l:                                int                   21h
+	                                  LOOP                  l
 
 ENDM clear_last_line
 
 ;________________________________________________________________________________________________________________________________________
 
 clear_screen MACRO
-									  mov ax,0600h
-									  mov bh,07
-									  mov cx,0
-									  mov dx,184fh
-									  int 10h
+	                                  mov                   ax,0600h
+	                                  mov                   bh,07
+	                                  mov                   cx,0
+	                                  mov                   dx,184fh
+	                                  int                   10h
 ENDM clear_screen
 
 ;__________________________________________________________________________________________________________________________________________
 
 move_cursor MACRO x, y
-									  mov ah,2 
-									  mov bh,0
-									  mov dl,x
-									  mov dh,y 
-									  int 10h
+
+	                                  mov                   ah,2
+	                                  mov                   bh,0
+	                                  mov                   dl,x
+	                                  mov                   dh,y
+	                                  int                   10h
+
 ENDM move_cursor
 
 ;__________________________________________________________________________________________________________________________________________
@@ -97,18 +100,19 @@ ENDM get_cursor
 
 print_dashes MACRO y
     local status_dashes
-    	                              mov     ah,2
-	                                  mov     bh,0                                                                                    	;page 0
-	                                  mov     dh,y                                                                                   	;Y=22
-	                                  mov     dl,-1
-	status_dashes:                    inc     dl                                                                                      	;start from X=0
-	                                  int     10h                                                                                     	;move cursor
-	                                  mov     bl,dl                                                                                   	;hold dl value temporarily because it will change
-	                                  mov     dl,'-'                                                                                  	;character to be printed
-	                                  int     21h                                                                                     	;print the char
-	                                  mov     dl,bl                                                                                   	;re-assign the value of dl again
-	                                  cmp     dl,79                                                                                   	;finish at X=79 'last column'
-	                                  jnz     status_dashes
+
+	                                  mov                   ah,2
+	                                  mov                   bh,0                                                                                	;page 0
+	                                  mov                   dh,y                                                                                	;Y=22
+	                                  mov                   dl,-1
+	status_dashes:                    inc                   dl                                                                                  	;start from X=0
+	                                  int                   10h                                                                                 	;move cursor
+	                                  mov                   bl,dl                                                                               	;hold dl value temporarily because it will change
+	                                  mov                   dl,'-'                                                                              	;character to be printed
+	                                  int                   21h                                                                                 	;print the char
+	                                  mov                   dl,bl                                                                               	;re-assign the value of dl again
+	                                  cmp                   dl,79                                                                               	;finish at X=79 'last column'
+	                                  jnz                   status_dashes
 ENDM print_dashes
 
 
@@ -141,7 +145,7 @@ ENDM print_game_separators
 score_bar_separators MACRO x, y, yf
 LOCAL score_bar1,score_bar2
 									 
-									 mov 		   ah,0ch                  ;the draw pixel mode of int 10h
+									  mov 		   ah,0ch                  ;the draw pixel mode of int 10h
 									  mov 		   bh,0                    ;page 0
 									  mov  		   al,0bh                  ;color (light cyan)
 									  mov 		   cx,x                    ;start at X=x
@@ -4001,13 +4005,16 @@ MAIN ENDP
 
 	;this function hadles the chat inside the game
 in_game_chatting proc
-	                                  clear_last_line
+
+	;-------------------------------- print the strings of the status bar
+									  clear_last_line
 
 	                                  move_cursor           0,24
 	                                  mov                   ah,9
 	                                  mov                   dx,offset end_ingame_chatting_str
 	                                  int                   21h
 
+	;-------------------------------- initialize the cursor parameters of the in-game chatting
 	                                  mov                   x1_ingame,1
 	                                  mov                   y1_ingame,20
 	                                  mov                   x2_ingame,41
@@ -4015,26 +4022,29 @@ in_game_chatting proc
 
 	                                  move_cursor           x1_ingame,y1_ingame
 
-
+	;-------------------------------- check if a key is pressed
 	main_loop_ig:                     mov                   ah,1
 	                                  int                   16h
 	                                  jnz                   write_send_ig
 
+	;-------------------------------- check if there is a sent character
 	                                  mov                   dx,3fdh
 	                                  in                    al,dx
 	                                  test                  al,1
 	                                  jnz                   rec_ig
+
 	                                  jmp                   main_loop_ig
 
 
-
+	;-------------------------------- read the key
 	write_send_ig:                    
 	                                  mov                   ah,0
 	                                  int                   16h
 
-
+	;-------------------------------- check if the character is non printable to send its scan code
 	                                  cmp                   al,0
 	                                  jz                    scan_code_ig
+									  
 	                                  mov                   sent_char,al
 	                                  jmp                   next_ig
 	scan_code_ig:                     cmp                   ah,3dh
@@ -4102,7 +4112,6 @@ in_game_chatting proc
 
 	finish_chatting:                  jmp                   end_chatting
 	m_loop2_ig:                       jmp                   m_loop_ig
-
 
 
 	write_recieve_ig:                 move_cursor           x2_ingame,y2_ingame
@@ -4603,7 +4612,6 @@ SendAndRecieveElementPosition PROC
 	                                  call                  RecieveAlUsingUART
 	;--------------------------------------------------------------------------------------------//feedback
 
-
 	;recieve player2 position
 	                                  call                  RecieveAxUsingUARTWithFeedBack
 	                                  mov                   player2x,Ax
@@ -4975,6 +4983,7 @@ DRAW_PLAYER1_WINS PROC
 
 	ENDING_W1:                        
 	                                  ret
+	                                  
 DRAW_PLAYER1_WINS ENDP
 
 BackGround proc
@@ -5740,6 +5749,7 @@ print_player2_score proc
 
 	;-------------------------------- move cursor to (41,18)
 	                                  move_cursor           41,18
+
 	;-------------------------------- print score
 	                                  mov                   cx,1                                                                                	;print the char one time
 	                                  mov                   al, player2_score
@@ -5919,9 +5929,10 @@ FREAZE_FOR_GOAL ENDP
 chatting_module proc
 	                                  clear_screen
 
-	                                  move_cursor           0,24
+	                                  move_cursor           0,24                                                                                	;last line of the screen
 	                                  mov                   ah,9
 
+	;-------------------------------- print the messages of the status bar
 	                                  mov                   dx,offset end_chatting_message1
 	                                  int                   21h
 
@@ -5931,12 +5942,13 @@ chatting_module proc
 	                                  mov                   dx,offset end_chatting_message2
 	                                  int                   21h
 
+	;-------------------------------- initialize the parameters of the screen
 	                                  mov                   x1,5
 	                                  mov                   x2,5
 	                                  mov                   y1,1
 	                                  mov                   y2,13
 
-	                                  
+	;-------------------------------- print the name of the current user
 	                                  move_cursor           0 ,0
 	                                  mov                   ah,9
 	                                  mov                   dx , offset username1
@@ -5945,7 +5957,8 @@ chatting_module proc
 	                                  mov                   ah ,2
 	                                  mov                   dl ,':'
 	                                  int                   21h
-									  
+
+	;-------------------------------- print the name of the other user
 	                                  move_cursor           0,12
 	                                  mov                   ah ,9
 	                                  mov                   dx , offset username2
@@ -5955,81 +5968,94 @@ chatting_module proc
 	                                  mov                   dl ,':'
 	                                  int                   21h
 
+	;-------------------------------- status dashes
 	                                  print_dashes          23
 	                                  print_dashes          11
+
 	                                  move_cursor           x1,y1
 
-	                                  
 
+	;-------------------------------- check if a key is pressed
 	main_loop:                        mov                   ah,1
 	                                  int                   16h
 	                                  jnz                   write_send
 
+	;-------------------------------- check if there is a sent character
 	                                  mov                   dx,3fdh
 	                                  in                    al,dx
 	                                  test                  al,1
 	                                  jnz                   rec
+									  
 	                                  jmp                   main_loop
 
 
-
+	;-------------------------------- get the pressed key
 	write_send:                       
 	                                  mov                   ah,0
 	                                  int                   16h
 
-
+	;-------------------------------- check if the character is non printable to send its scan code
 	                                  cmp                   al,0
 	                                  jz                    scan_code
 	                                  mov                   sent_char,al
 	                                  jmp                   nextt
+
+	;-------------------------------- check if the key is F3 (the key which ends the chat)
 	scan_code:                        cmp                   ah,3dh
 	                                  jz                    f3_key
+
+	;-------------------------------- if the key is non printable and is not F3 then return back and don't send anything
 	                                  jmp                   main_loop
 	f3_key:                           mov                   sent_char,-1
 
-
-
+	;-------------------------------- check if the holding register is empty to send the character
 	nextt:                            mov                   dx,3fdh
 	ag:                               in                    al,dx
 	                                  test                  al,00100000b
 	                                  jz                    ag
 
+	;-------------------------------- send the character
 	                                  mov                   dx,3f8h
 	                                  mov                   al,sent_char
 	                                  out                   dx,al
 
-	                                  move_cursor           x1,y1
 
+	                                  move_cursor           x1,y1
+	;-------------------------------- the key was F3 then exit
 	                                  cmp                   sent_char,-1
 	                                  jz                    finish_program
 
+	;-------------------------------- the key is enter
 	                                  cmp                   sent_char,0dh
 	                                  jz                    new_line
 
+	;-------------------------------- the key is backspace then return to the loop
 	                                  cmp                   sent_char,08
 	                                  jz                    main_loop
 
 	print_char:                       get_cursor
-	                                  mov                   bl,dl
+
+	                                  mov                   bl,dl                                                                               	;save the x-value of the cursor
 	                                  mov                   dl,sent_char
 	                                  mov                   ah,2
-	                                  int                   21h
-	                                  cmp                   bl,79
+	                                  int                   21h                                                                                 	;print the char
+	                                  cmp                   bl,79                                                                               	;check if the x-value is the last column
 	                                  jz                    n1
 	                                  get_cursor
 	                                  mov                   x1,dl
-	                                  mov                   y1,dh
+	                                  mov                   y1,dh                                                                               	;save the cursor values
 	                                  jmp                   main_loop
 
+	;-------------------------------- far jump
 	rec:                              jmp                   write_recieve
 	m_loop:                           jmp                   main_loop
 
 	new_line:                         get_cursor
 
-
-
-	n1:                               cmp                   dh,10
+	n1:                               cmp                   dh,10                                                                               	;check if it the last row
 	                                  jnz                   next_line
+									  
+	;-------------------------------- scroll up one line
 	                                  mov                   ah,6
 	                                  mov                   al,1
 	                                  mov                   bh,7
@@ -6040,23 +6066,25 @@ chatting_module proc
 	                                  int                   10h
 	                                  mov                   dh,9
 
+	;-------------------------------- move cursor to the last line
 	next_line:                        mov                   ah,2
 	                                  mov                   bh,0
 	                                  mov                   dl,5
 	                                  inc                   dh
 	                                  int                   10h
 	                                  get_cursor
-	                                  mov                   x1,dl
+	                                  mov                   x1,dl                                                                               	;save the cursor values
 	                                  mov                   y1,dh
 	                                  jmp                   main_loop
 
 	finish_program:                   jmp                   en
 
-	;-----------------------------------
+	;-------------------------------- get the recieved character
 	write_recieve:                    move_cursor           x2,y2
 	                                  mov                   dx,3f8h
 	                                  in                    al,dx
 
+	;-------------------------------- the recieved key is F3 then exit
 	                                  cmp                   al,-1
 	                                  jz                    en
 
@@ -6079,13 +6107,13 @@ chatting_module proc
 	                                  mov                   y2,dh
 	                                  jmp                   main_loop
 
-
-
 	new_line2:                        get_cursor
 
 
 	n2:                               cmp                   dh,22
 	                                  jnz                   next_line2
+
+	;-------------------------------- scroll up one line
 	                                  mov                   ah,6
 	                                  mov                   al,1
 	                                  mov                   bh,7
@@ -6102,12 +6130,12 @@ chatting_module proc
 	                                  inc                   dh
 	                                  int                   10h
 	                                  get_cursor
-	                                  mov                   x2,dl
+	                                  mov                   x2,dl                                                                               	;save the cursor values
 	                                  mov                   y2,dh
 	                                  jmp                   main_loop
 
 	en:                               clear_screen
-	                                  call                  program_functionalities
+	                                  call                  program_functionalities                                                             	;main screen
 	                                  ret
 
 chatting_module endp
