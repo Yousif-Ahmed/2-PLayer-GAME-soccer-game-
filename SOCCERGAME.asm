@@ -96,7 +96,7 @@ ENDM score_bar_separators
 
 ;______________________________________________________________________________________________________________________________________________
 
-main_screen MACRO username_buffer, username, actual_size, name_message, enter_key, error_message, p, player_color
+main_screen MACRO username_buffer, username, actual_size, name_message, enter_key, error_message,  player_color
 LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated, colored
 
 	;-------------------------------- clear screen
@@ -113,17 +113,7 @@ LOCAL reEnter, NoError, v1, v2,v3, v4, n1, n2, n3, n4, validated, colored
 	                                  mov   dl,36
 									  mov   di,0                     ;to indicate the index of the char to be printed
 
-	colored:                          mov   ah,2
-									  int   10h
-									  inc   dl                       ;inc the x-value of the cursor to print the next char
-
-	;-------------------------------- print '[PLAYER #]'
-	                                  mov   ah,9
-	                                  mov   al,p[di]                 ;the char to be printed
-									  inc   di                       ;inc the index to the next char
-									  int   10h                      ;print the char
-	                                  cmp   di,10                    ;the size of the string
-									  jnz   colored
+	
 
 	;-------------------------------- move cursor to (29,10)
 	                                  mov   ah,2
@@ -3562,9 +3552,6 @@ EXTRA_DATA2 SEGMENT
 
 	error_message         db               'Incorrect Username, The Username Should Start With a Letter','$'
 
-	p1                    db               '[PLAYER 1]','$'
-
-	p2                    db               '[PLAYER 2]','$'
 	
 	chatting_message      db               '*To start chatting, press F1', '$'
 
@@ -3577,6 +3564,17 @@ EXTRA_DATA2 SEGMENT
 	load_screen_str       db               'Press any key to continue','$'
 
 	LEVEL_MESSAGE         db               'For Level 1 Press 1 ||  For level 2 Press 2','$'
+
+	Chat_Rec_inv          db               '   Sent you a chat invitation','$'
+
+	Chat_sent_inv         db               'you sent a chat invitation','$'
+
+	game_Rec_inv          db               '   Sent you a Game invitation','$'
+
+	game_sent_inv         db               'you sent a game invitation','$'
+
+	
+	
 
 	                      username1_buffer label byte
 	max_size1             db               16
@@ -3601,8 +3599,9 @@ EXTRA_DATA2 SEGMENT
 
 	;UART used variables
 
-	IsMainUser            db               1
+	IsMainUser            db               0
 	GameStatus            db               0000
+	
 	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,                                                                                                                                                                               	;boolean to check if it's the main player who updates the game
 	;	RecievedPlayerX       dw               ?                                                                                                                                                                                                     	;player's recieved x position
 	;	RecievedPlayerY       dw               ?                                                                                                                                                                                                     	;player's recieved y position
@@ -3611,7 +3610,8 @@ EXTRA_DATA2 SEGMENT
 	;	RecievedStatus        db               ?                                                                                                                                                                                                     	;represent game status 0000 dcba   a , b ,c &d are LST nibble
 	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,
 	;	SendStatus            db               ?
-
+	test_send             db               "i send",'$'
+	test_recieve          db               "i recieve",'$'
 
 .CODE
 MAIN PROC FAR
@@ -3624,8 +3624,32 @@ MAIN PROC FAR
 
 	;-------------------------------- main screen for the two players
 
-	                                  main_screen           username1_buffer, username1, actual_size1, name_message, enter_key, error_message, p1, 7
-	                                  main_screen           username2_buffer, username2, actual_size2, name_message, enter_key, error_message, p2, 9
+	                                  main_screen           username1_buffer, username1, actual_size1, name_message, enter_key, error_message, 7
+
+	                                  mov                   di , offset username1
+	                                  mov                   si, offset username2
+    ;------------------------------- putting the size of my name in cl
+	                                  mov                   cl ,actual_size1
+
+	;------------------------------- now we want to communicate with each other to send then recieve or name
+	; ------------------------------ send actual size
+	                                  mov                   al , cl
+	                                  call                  SendAlUsingUART
+	
+	
+	;------------------------------- recieve actual size of my friend name
+
+	                                  call                  RecieveAlUsingUART
+	                                  mov                   ch , al
+	
+									 
+	                                  mov                   actual_size2 , ch
+									 
+	;-------------------------------  now cl , has my name size and ch has my friend name size
+	;-------------------------------  send and recieve names of two players
+	                                  call                  SEND_RECIEVE_PLAYERS_NAME
+									   
+
 
 	;-------------------------------- program functionalities screen
                 
@@ -3636,7 +3660,7 @@ MAIN PROC FAR
 	key_specify_action:               mov                   ah,1
 	                                  int                   16h
 	                                  jz                    key_specify_action                                                                      	;check if a key is pressed
-		
+		   
 
 	                                  mov                   ah,0
 	                                  int                   16h                                                                                     	;get the key
@@ -3645,8 +3669,18 @@ MAIN PROC FAR
 	                                  jz                    end_                                                                                    	;if the key is ESC
 
 	                                  cmp                   ah,3ch
-	                                  jz                    play_game                                                                               	;if the key is F2
+	                                  jz                    check_main_player
 
+	                                  jmp                   check_chat_key
+
+	check_main_player:              ;  call                  SEND_RECIEVE_F2 //not work
+
+	                                  jmp                   play_game                                                                               	;if the key is F2
+								
+	; then one of player press f2 he should receive and if the other player didn't press  f2 then
+	; he should set main player 1 and send to player 2 that he pressed f2
+	                                  
+	check_chat_key:                   
 	                                  cmp                   ah,3bh
 	                                  jnz                   key_specify_action                                                                      	;if the key is F1 (for chatting)
 	                                  call                  chatting_module
@@ -3807,6 +3841,99 @@ MAIN PROC FAR
 	                                  int                   21h
             
 MAIN ENDP
+	;DESCRIPTION
+	;NOW PLAYER PRESS F2 THEN WE CHECK WHO IS THE MAIN PLAYER THEN FIRST HE RECIEVE
+	;IF THE OTHER PLAYER PRESS AND SEND FIRST THEN THE OTHER PLAYER IS THE MAIN
+	;ELSE I SEND TO THE OTHER PLAYER THE KEY 'S SCAN
+SEND_RECIEVE_F2 PROC
+	                    
+	SEND_F2:                          
+	                                  mov                   dx , 3fdh
+									  
+	                                  in                    al ,dx
+	                                  test                  al,00100000b
+	                                  jz                    RECIEVE_F2
+                           
+
+	                                  mov                   dx , 3f8h
+	                                  mov                   al ,3ch
+	                                  out                   dx ,al
+	                                  mov                   IsMainUser ,1
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	                                  move_cursor           0 ,24
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset test_send
+	                                  int                   21h
+
+	                                  jmp                   FINSISH_F2_COM
+									  call                   FREAZE_FOR_GOAL
+
+
+	RECIEVE_F2:                       
+	                                  mov                   dx , 3fdh
+	                                  in                    al , dx
+	                                  test                  al ,1
+	                                  jz                    SEND_F2
+
+	                                  mov                   dx , 03f8h
+	                                  in                    al ,dx
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	                                  move_cursor           0 ,24
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset test_recieve
+	                                  int                   21h
+									  call                 FREAZE_FOR_GOAL
+
+	FINSISH_F2_COM:                   
+	                                  ret
+	                              
+
+
+SEND_RECIEVE_F2 ENDP
+
+
+SEND_RECIEVE_PLAYERS_NAME PROC
+	send_res:                         
+	                                  mov                   dx , 3fdh
+									  
+	                                  in                    al ,dx
+	                                  test                  al,00100000b
+	                                  jz                    check_finish
+
+	                                  cmp                   cl ,0
+	                                  je                    recieve
+
+	                                  mov                   dx , 3f8h
+	                                  mov                   al ,[di]
+	                                  out                   dx ,al
+	                                  inc                   di
+	                                  dec                   cl
+
+	recieve:                          
+	                                  mov                   dx , 3fdh
+	                                  in                    al , dx
+	                                  test                  al ,1
+	                                  jz                    check_finish
+
+	                                  mov                   dx , 03f8h
+	                                  in                    al ,dx
+
+	                                  mov                   [si], al
+	                                  inc                   si
+	                                  dec                   ch
+
+	check_finish:                     
+	                                  cmp                   cl ,0
+	                                  jnz                   send_res
+
+	                                  cmp                   ch ,0
+	                                  jnz                   send_res
+	                                  ret
+
+
+
+
+SEND_RECIEVE_PLAYERS_NAME ENDP
 
 
 	;description
