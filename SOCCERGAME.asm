@@ -3850,12 +3850,12 @@ MAIN PROC FAR
 
 	Recieve_level2:                   mov                   LEVEL_STATUS,al
 	 
-	                                  move_cursor           26 ,17
+	                                  move_cursor           26 ,23
 	                                  mov                   ah ,9
 	                                  mov                   dx , offset Level2_message
 	                                  int                   21h
 
-	                                  move_cursor           27 ,18
+	                                  move_cursor           27 ,24
 	                                  mov                   ah ,9
 	                                  mov                   dx , offset load_screen_str
 	                                  int                   21h
