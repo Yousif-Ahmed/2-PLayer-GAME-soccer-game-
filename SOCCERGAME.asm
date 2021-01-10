@@ -3481,6 +3481,9 @@ EXTRA_DATA2 SEGMENT
 	; MAX NUMBER OF GOALS IN LEVEL1
 	MAX_GOAL_IN_level1            equ              3
 
+	; MAX NUMBER OF GOALS IN LEVEL
+	MAX_GOAL_IN_level2            equ              5
+
 	;GOOOOAL PARAMETER (DRAWING)
 	GOAL_X                        DW               250
 	GOAL_Y                        DW               20
@@ -3585,6 +3588,7 @@ EXTRA_DATA2 SEGMENT
 	Player1X                      DW               ?
 	Player1Y                      DW               ?
 
+	MAX_GOAL_IN_level             db               ?
 	Player1SpeedX                 DW               05h
 	Player1SpeedY                 DW               32h
 	
@@ -3734,6 +3738,7 @@ MAIN PROC FAR
                 
 	functionalites:                   clear_screen
 	                                  call                  program_functionalities
+	                                  mov                   IsMainUser,0
 
 	;-------------------------------- wait for a key in the functionalities screen
 	key_specify_action:               
@@ -3910,6 +3915,9 @@ MAIN PROC FAR
 	                                  MOV                   BX ,LandLine_level1
 	                                  MOV                   LandLine , BX
 
+	                                  MOV                   BL , MAX_GOAL_IN_level1
+	                                  MOV                   MAX_GOAL_IN_level,BL
+
 	                                  JMP                   GAME_
 	                            
 	LEVEL_2:                          
@@ -3935,6 +3943,9 @@ MAIN PROC FAR
 	                                  MOV                   GravityLine,BX
 	                                  MOV                   BX ,LandLine_level2
 	                                  MOV                   LandLine , BX
+
+	                                  MOV                   BL , MAX_GOAL_IN_level2
+	                                  MOV                   MAX_GOAL_IN_level,BL
 	;-------------------------------- change mode to graphics mode to clear the screen
 	GAME_:                            mov                   ax, 4F02h
 	                                  mov                   bx, 0100h                                                                           	; 640x400 screen graphics mode
@@ -5777,7 +5788,7 @@ CheckIfBallInsideNet PROC
 	                                  JL                    BallIsnotInsideLeftNet
 
 	                                  OR                    GameStatus,0010b
-	                                  mov                   Bl,MAX_GOAL_IN_level1
+	                                  mov                   Bl,MAX_GOAL_IN_level
 	                                  dec                   Bl
 	                                  cmp                   player2_score , Bl
 	                                  jne                   BallIsnotInsideLeftNet
@@ -5798,7 +5809,7 @@ CheckIfBallInsideNet PROC
 	                                  JL                    BallIsnotInsideRightNet
 
 	                                  OR                    GameStatus,0001b
-	                                  mov                   Bl,MAX_GOAL_IN_level1
+	                                  mov                   Bl,MAX_GOAL_IN_level
 	                                  dec                   Bl
 	                                  cmp                   player1_score , Bl
 	                                  jne                   BallIsnotInsideRightNet
@@ -5858,7 +5869,6 @@ new_game proc
 
 	                                  mov                   player1_score,0
 	                                  mov                   player2_score,0
-
 	                                  cmp                   LEVEL_STATUS,1
 	                                  JE                    GAME_LEVEL_1
 	                                  JMP                   GAME_LEVEL_2
