@@ -3656,7 +3656,7 @@ EXTRA_DATA2 SEGMENT
 
 	IsMainUser                    db               0
 	GameStatus                    db               0000
-	
+	GameStatus2                   db               00                                                                                                                                                                                                    	;to handle exit and in game chat
 	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,                                                                                                                                                                               	;boolean to check if it's the main player who updates the game
 	;	RecievedPlayerX       dw               ?                                                                                                                                                                                                     	;player's recieved x position
 	;	RecievedPlayerY       dw               ?                                                                                                                                                                                                     	;player's recieved y position
@@ -3678,6 +3678,7 @@ EXTRA_DATA2 SEGMENT
 	y1_ingame                     db               ?
 	x2_ingame                     db               ?
 	y2_ingame                     db               ?
+
 
 
 .CODE
@@ -3905,11 +3906,11 @@ MAIN PROC FAR
 	                                  call                  delay
 	                                 
 	;-------------------------------- GAME MAIN LOOP (INFINITE LOOP UNTILL THE PLAYER PRESS F4)
-	GameProcess:                      call                  CheckKeyPressed
+	GameProcess:                      
 
-	;-------------------------------- check if the user pressed on F4
-	                                  cmp                   si,-1
-	                                  jnz                   continue_game
+	;-------------------------------- check if the user pressed on F4 which is first bit in GameStatus2
+	                                  test                  GameStatus2,01b
+	                                  jz                    continue_game
 	                                  call                  new_game
 
 	;-------------------------------- change the mode to text mode to go back to the functionalities screen
@@ -3918,8 +3919,13 @@ MAIN PROC FAR
 	                                  int                   10h
 	                                  jmp                   functionalites
 	;-------------------------------------------------------------------------
-
-	continue_game:                    
+	;-------------------------------- check if in game chat is chosen second bit in gamestatus2
+	continue_game:                    test                  GameStatus2,10b
+	                                  jz                    SoccerGame
+	                                  call                  in_game_chatting
+									  
+	;-------------------------------- then check if key is pressed
+	SoccerGame:                       call                  CheckKeyPressed
 	                                  call                  MainProcessOftTheGame
 	                                  jmp                   GameProcess
 									  
@@ -4082,7 +4088,9 @@ in_game_chatting proc
 	                                  jmp                   main_loop_ig
 
 
-	end_chatting1:                    ret
+	end_chatting1:                    
+	                                  And                   GameStatus2,01b
+	                                  ret
 
 
 in_game_chatting endp
@@ -4518,12 +4526,26 @@ SendAndRecieveElementPosition PROC
 	                                  call                  RecieveAlUsingUART
 	;--------------------------------------------------------------------------------------------//feedback
 
+	                                  mov                   al,GameStatus2
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+
+
 	;recieve player2 position
 	                                  call                  RecieveAxUsingUARTWithFeedBack
 	                                  mov                   player2x,Ax
 
 	                                  call                  RecieveAxUsingUARTWithFeedBack
 	                                  mov                   player2Y,AX
+
+	                                  call                  RecieveAlUsingUART
+	                                  OR                    GameStatus2,al
+	
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
 
 	                                  jmp                   ExitSendAndRecieveElementPosition
 
@@ -4553,12 +4575,25 @@ SendAndRecieveElementPosition PROC
 	;--------------------------------------------------------------------------------------------//feedback
 	                                  call                  SendAlUsingUART
 	;--------------------------------------------------------------------------------------------//feedback
+
+	                                  call                  RecieveAlUsingUART
+	                                  OR                    GameStatus2,al
+	
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
 	;send player position
 	                                  mov                   Ax, Player2X
 	                                  call                  SendAxUsingUARTWithFeedBack
 
 	                                  mov                   Ax, Player2Y
 	                                  call                  SendAxUsingUARTWithFeedBack
+
+	                                  mov                   al,GameStatus2
+	                                  call                  SendAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
+	                                  call                  RecieveAlUsingUART
+	;--------------------------------------------------------------------------------------------//feedback
 
 	ExitSendAndRecieveElementPosition:
 	                                  ret
@@ -5145,6 +5180,7 @@ PlayerFall endp
 	; AFTER WE GET THE PRESSED KEY WE SHIFT PLAYER COORDINATE
 
 CheckKeyPressed PROC
+	                                  clear_screen
 	                                  mov                   si,0                                                                                	;if the user pressed on F4 during a game the SI register will hold -1 otherwise 0
 
 	ReadKey:                          mov                   ah,1                                                                                	;Get key pressed Don't Wait for the key
@@ -5177,17 +5213,19 @@ CheckKeyPressed PROC
 	                                  JZ                    up
 	                                  cmp                   al,'W'
 	                                  JZ                    up
-                         
-	;-------------------------------- this is for the game's exit
+									  
+	;-------------------------------- this is for check inline chat and set GameStatus2 boolean
+	                                  cmp                   ah,3dh
+	                                  jnz                   NoInlineChatting
+	                                  OR                    GameStatus2 ,10b
+	;--------------------------------------------------------
+	NoInlineChatting:                 
+	;-------------------------------- this is for the game's exit and set GameStatus2 boolean
 	                                  cmp                   ah,3eh
 	                                  jnz                   Exit                                                                                	;F4 key
-	                                  mov                   si, -1                                                                              	;to indicate that the game will exit
+	                                  OR                    GameStatus2,01b                                                                     	;to indicate that the game will exit
 	;--------------------------------------------------------
-	;-------------------------------- this is for check inline chat
-	                                  cmp                   ah,3dh
-	                                  jnz                   Exit
-	                                  call                  in_game_chatting
-	;--------------------------------------------------------
+
 	                                  JMP                   ExitCheckKeyPressed
 	Bridge1:                          jmp                   ReadKey
 
@@ -5753,6 +5791,7 @@ PutElementsInIntialPosition ENDP
 new_game proc
 	;------------------------------------ This proc initializes the parameters of the game after ending the game
 	;mov                   IsMainUser,0
+	                                  mov                   GameStatus2,0
 
 	                                  mov                   player1_score,0
 	                                  mov                   player2_score,0
