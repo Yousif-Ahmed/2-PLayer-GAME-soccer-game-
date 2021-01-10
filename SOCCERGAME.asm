@@ -3665,9 +3665,7 @@ EXTRA_DATA2 SEGMENT
 	;	RecievedStatus        db               ?                                                                                                                                                                                                     	;represent game status 0000 dcba   a , b ,c &d are LST nibble
 	;a ->main player scored,b->other player scored,c ->main player won,d->other player won,
 	;	SendStatus            db               ?
-	test_send                     db               "i send",'$'
-	test_recieve                  db               "i recieve",'$'
-
+	
 	;notification variables
 	notifi_recievedgameinvitation db               "Recieved Game Invitation press f2 to accept esc to cancel","$"
 	notifi_recievedchatinvitation db               "Recieved chat Invitation press f1 to accept esc to cancel","$"
@@ -3715,6 +3713,7 @@ MAIN PROC FAR
 	;-------------------------------  now cl , has my name size and ch has my friend name size
 	;-------------------------------  send and recieve names of two players
 	                                  call                  SEND_RECIEVE_PLAYERS_NAME
+									  
 									   
 
 
@@ -3751,13 +3750,6 @@ MAIN PROC FAR
 	                                  cmp                   al,2
 	                                  jz                    play_game                                                                           	;if the key is F2
 	SkipGame:                         
-	;                                   jz                    check_main_player
-
-	;                                   jmp                   check_chat_key
-
-	; check_main_player:              ;  call                  SEND_RECIEVE_F2 //not work
-
-	;                                   jmp                   play_game                                                                               	;if the key is F2
 								
 	; ; then one of player press f2 he should receive and if the other player didn't press  f2 then
 	; ; he should set main player 1 and send to player 2 that he pressed f2
@@ -4130,14 +4122,9 @@ SEND_RECIEVE_F2 PROC
 	                                  mov                   al ,3ch
 	                                  out                   dx ,al
 	                                  mov                   IsMainUser ,1
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	                                  move_cursor           0 ,24
-	                                  mov                   ah ,9
-	                                  mov                   dx , offset test_send
-	                                  int                   21h
+	
 
 	                                  jmp                   FINSISH_F2_COM
-	                                  call                  FREAZE_FOR_GOAL
 
 
 	RECIEVE_F2:                       
@@ -4148,12 +4135,7 @@ SEND_RECIEVE_F2 PROC
 
 	                                  mov                   dx , 03f8h
 	                                  in                    al ,dx
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	                                  move_cursor           0 ,24
-	                                  mov                   ah ,9
-	                                  mov                   dx , offset test_recieve
-	                                  int                   21h
-	                                  call                  FREAZE_FOR_GOAL
+	
 
 	FINSISH_F2_COM:                   
 	                                  ret
@@ -4199,6 +4181,10 @@ SEND_RECIEVE_PLAYERS_NAME PROC
 
 	                                  cmp                   ch ,0
 	                                  jnz                   send_res
+
+	                                  mov                   bl,actual_size2
+	                                  mov                   bh,0
+	                                  mov                   username2[bx], '$'
 	                                  ret
 
 
@@ -5806,14 +5792,36 @@ FREAZE_FOR_GOAL ENDP
 
 chatting_module proc
 
+	                             
+
 	                                  mov                   x1,5
 	                                  mov                   x2,5
 	                                  mov                   y1,1
 	                                  mov                   y2,13
 	                                  clear_screen
+	                                  
+	                                  move_cursor           0 ,0
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset username1
+	                                  int                   21h
+
+	                                  mov                   ah ,2
+	                                  mov                   dl ,':'
+	                                  int                   21h
+									  
+	                                  move_cursor           0,12
+	                                  mov                   ah ,9
+	                                  mov                   dx , offset username2
+	                                  int                   21h
+
+	                                  mov                   ah ,2
+	                                  mov                   dl ,':'
+	                                  int                   21h
+
 	                                  print_dashes          23
 	                                  print_dashes          11
 	                                  move_cursor           x1,y1
+
 	                                  
 
 	main_loop:                        mov                   ah,1
