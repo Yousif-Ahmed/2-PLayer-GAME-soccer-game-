@@ -3742,8 +3742,7 @@ MAIN PROC FAR
                 
 	functionalites:                   clear_screen
 	                                  call                  program_functionalities
-	                                  mov                   IsMainUser,0
-
+	                               
 	;-------------------------------- wait for a key in the functionalities screen
 	key_specify_action:               
 	                                  call                  CheckRecievedInvitation
@@ -3982,6 +3981,9 @@ MAIN PROC FAR
 	                                  mov                   ah,0
 	                                  mov                   al,3
 	                                  int                   10h
+	                                  call                  SwapTheTwoNamesIfNotMainUser
+	                                  mov                   IsMainUser,0
+
 	                                  jmp                   functionalites
 	;-------------------------------------------------------------------------
 	;-------------------------------- check if in game chat is chosen second bit in gamestatus2
